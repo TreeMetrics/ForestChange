@@ -1,0 +1,21 @@
+# /usr/bin/env python
+
+# PROJECT:	    EO4Atlantic
+# MODULE:		forest_change.py
+# AUTHOR:		Treemetrics
+# DESCRIPTION: 	This module manages the analysis and the outputs.
+
+# COPYRIGHT:	(C) 2017 Treemetrics all rights reserved.
+# ==========================================================================================
+""" This module manages the analysis and outputs"""
+
+import args_reader
+import test
+
+args = args_reader.main()
+
+print args
+test.main(d1=args.dataset1,d2=args.dataset2,settings=args.settings)
+
+
+
