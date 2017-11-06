@@ -9,6 +9,8 @@
 # ==========================================================================================
 """ Basic tools for read and analyze _raster using gdal."""
 
+import warnings
+import os
 import numpy as np
 from collections import namedtuple
 
@@ -25,9 +27,6 @@ except ImportError:
     # from osgeo import gdalnumeric
     from osgeo import gdal_array
 
-# Global variables
-## NO_DATA = settings.NO_DATA
-
 # Register all drivers
 gdal.AllRegister()
 
@@ -35,7 +34,6 @@ gdal.AllRegister()
 class Gdal2Py(object):
     """A class holding information about a ogr feature"""
 
-    #info_tuple = namedtuple('info', 'type projection xsize ysize yres xres extent bands bands_type nodata')
     extent_tuple = namedtuple('extent', ['xmin', 'xmax', 'ymin', 'ymax'])
 
     # Prevents to create dictionaries (low memory).
@@ -83,16 +81,16 @@ def file_import(file_path):
     """ Load a gdal file to local database """
 
     if not isvalid(file_path):
-        ###  logger.Logging().warning(msg="File cannot be open. Aborting ...")
+        warnings.warn("File cannot be open. " + str(file_path) + ". Aborting ...")
         return
 
     src = gdal.Open(file_path)
     src.SetMetadataItem('FilePath', file_path)
 
-    driver = gdal.GetDriverByName('GTiff')
-    data_source = driver.CreateCopy(file_path, src, 0)
+    #driver = gdal.GetDriverByName('MEM')
+    #data_source = driver.CreateCopy(file_path, src, 0)
 
-    return Gdal2Py(ds=data_source, data=True)
+    return Gdal2Py(ds=src, data=True)
 
 
 def ds2array(ds):
@@ -112,7 +110,7 @@ def isvalid(source):
     """ Check if the file is a valid gdal _raster"""
 
     if not source:
-        ### logger.Logging().warning(msg="GDAL source not defined.")
+        warnings.warn("GDAL source not defined.")
         return False
 
     # Check if file
@@ -134,7 +132,7 @@ def isvalid(source):
     projection = ds.GetProjection()
     epsg, proj4 = wkt2epsg(projection)
     if not proj4 or proj4 == '':
-        ### logger.Logging().warning(msg="Data source has NOT projection information.")
+        warnings.warn("Data source has NOT projection information.")
         return False
 
     return True
@@ -148,3 +146,75 @@ def wkt2epsg(wkt):
     epsg = srs.GetAttrValue("AUTHORITY", 1)
 
     return epsg, proj4
+
+
+def np2type(data):
+
+    np2gdal = {GDT_Byte: np.uint8,
+               GDT_UInt16: np.uint16,
+               GDT_Int16: np.int16,
+               GDT_UInt32: np.uint32,
+               GDT_Int32: np.int32,
+               GDT_Float32: np.float32,
+               GDT_Float64: np.float64,
+               GDT_CInt16: np.complex64,
+               GDT_CInt32: np.complex64,
+               GDT_CFloat32: np.complex64,
+               GDT_CFloat64: np.complex128}
+
+    key = [key for key, value in np2gdal.iteritems() if value == data.dtype][0]
+
+    if data.dtype == np.int64:
+        # Note that Int64 is not supported for GDAL
+        warnings.warn('Int64 is not supported for GDAL')
+
+    return key
+
+
+def py2gdal(src_array, file_path, ds_base, driver='GTiff', nodata=0, dtype=None):
+
+    # Get required info from ds_base
+    driver = gdal.GetDriverByName(driver)
+    geotransform = ds_base.GetGeoTransform()
+    projection = ds_base.GetProjection()
+
+    # Conver to a 3D numpy array if required
+    if isinstance(src_array, list):
+        src_array = np.array(src_array)
+
+    if len(src_array.shape) <= 2:
+        src_array = np.array([src_array])
+
+    cols = len(src_array[0][0])
+    rows = len(src_array[0])
+    nbands = len(src_array)
+
+    if rows != ds_base.RasterYSize or cols != ds_base.RasterXSize:
+        raise TypeError("Columss or rows are not matching the reference dataset")
+
+    # Replace No data
+    src_array[src_array == np.nan] = nodata
+
+    # Get dtype from array
+    if not dtype:
+        if src_array.dtype == np.int64:
+            for bid1 in xrange(nbands):
+                src_array[bid1] = src_array[bid1].astype(np.int32)
+
+        dtype = np2type(src_array[0])
+
+    out_ds = driver.Create(file_path, cols, rows, nbands, dtype)
+    out_ds.SetGeoTransform(geotransform)
+    out_ds.SetProjection(projection)
+
+    for bid in xrange(nbands):
+        band = out_ds.GetRasterBand(bid + 1)
+        band.WriteArray(src_array[bid], 0, 0)
+        out_ds.GetRasterBand(bid + 1).SetNoDataValue(nodata)
+        band.FlushCache()
+
+    if not os.path.exists(file_path):
+        warnings.warn("Failed to create GeoTiff file. " + str(file_path))
+        return
+
+    return out_ds

@@ -11,13 +11,18 @@
 
 import os
 import argparse
+import json
+
 from version import __version__, __date__, __copyright__
+
+default_settings_file = os.path.join(os.getcwd(),"settings.json")
+
 
 class FileCheck(argparse.Action):
     def __call__(self, parser_i, namespace, values, option_string=None):
         prospective_file = values
 
-        if not prospective_file or not os.path.exists(prospective_file):
+        if not prospective_file or not os.path.isfile(prospective_file):
             parser_i.print_help()
             #print 'File does not exists. ' + str(prospective_file)
             #exit()
@@ -25,6 +30,16 @@ class FileCheck(argparse.Action):
 
         else:
             setattr(namespace, self.dest, prospective_file)
+
+
+class dump_into_namespace(object):
+    def __init__(self, adict):
+        self.__dict__.update(adict)
+
+
+def read_json_file(filepath):
+    with open(filepath) as data_file:
+        return json.load(data_file)
 
 
 def main():
@@ -51,16 +66,43 @@ def main():
     parser.add_argument("-o", "--output", required=True,
                         help="Output file path (TIF format)")
 
-    parser.add_argument("-s", "--source", type=str, choices=['sentinel'], default='sentinel', required=True,
-                        help="Forest boundaries. (Optional)")
+    if os.path.isfile(default_settings_file):
 
-    parser.add_argument("-z", "--settings",
-                        default="""{"source": { "sentinel": {"name": "sentinel","bands": {"red_band": 1,"green_band": 3,
-                        "blue_band": 1,"nir_band": 8 },"segment_size": 2}}""",
-                        help="JSON with parameters for the analysis.(Optional)")
+        profiles = read_json_file(default_settings_file)['profiles'].keys()
+
+        parser.add_argument("-p", "--parameters", type=str, choices=profiles, default='sentinel_default', required=False,
+                            help="Profiles including the parameters for analysis. "
+                                 "Check 'settings.json' file to add/change an analysis profile")
+
+    else:
+        json_template = """ JSON Template: 
+        {"profiles": {
+        "sentinel_default": {
+        "source_name": "sentinel",
+        "bands": {
+        "red_band": 1,
+        "green_band": 3,
+        "blue_band": 1,
+        "nir_band": 8
+        },
+        "equalization":"False",
+        "normlisation":"False",
+        "segment_size": 2
+        }
+        }
+        }"""
+
+        raise TypeError("Please specify the parameters for analysis. JSON file with parameters is required: " +
+                        str(default_settings_file) + str(json_template))
 
     # Check and get arguments
     args = parser.parse_args()
+
+    # Read settings
+    parameters = read_json_file(os.path.join(os.getcwd(), "settings.json"))['profiles'][args.parameters]
+    parameters = dump_into_namespace(parameters)
+
+    args.parameters = parameters
     # args = vars(parser.parse_args())
 
     return args

@@ -1,0 +1,16 @@
+{"profiles": {
+  "sentinel_default": {
+    "source_name": "sentinel",
+    "bands": {
+      "red_band": 1,
+      "green_band": 2,
+      "blue_band": 3,
+      "nir_band": 8
+    },
+      "equalization":"True",
+      "normalisation":"True",
+
+      "segment_size": 2
+  }
+}
+}
