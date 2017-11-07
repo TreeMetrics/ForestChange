@@ -17,7 +17,7 @@ from miscellaneous import cmd
 from bunch import Config
 import logging
 
-settings_json_path = os.path.join(os.getcwd(), "settings.json")
+settings_json_path = os.path.join(os.path.dirname(__file__), "settings.json")
 
 json_template = """ JSON Template: 
     {"profiles": {
@@ -66,7 +66,7 @@ def check_config():
 
     # Check SAGA
     if not 'saga_bins' in envidic:
-        envidic['saga_bins'] = str(find_bins('saga_cmd')).strip()
+        envidic['saga_cmd'] = str(find_bins('saga_cmd')).strip()
 
     if not os.path.exists(str(envidic['saga_bins'])):
         raise Exception('Error finding SAGA bins. ' + str(envidic['saga_bins']))
