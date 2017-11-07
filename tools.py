@@ -10,6 +10,7 @@
 """ This module is a test"""
 
 import numpy as np
+import logging
 
 
 def equalization(raster_array, nan=0):
@@ -32,7 +33,10 @@ def equalization(raster_array, nan=0):
     # Replace nan values
     array_equalized[array_equalized == nan] = np.nan
 
-    return array_equalized
+    if array_equalized and len(array_equalized) == len(raster_array):
+        return array_equalized
+    else:
+        logging.warning('Failed creating equalization')
 
 
 def normalisation(raster_array):
@@ -41,7 +45,10 @@ def normalisation(raster_array):
 
     raster_array *= 255.0 / raster_array.max()
 
-    return raster_array
+    if raster_array:
+        return raster_array
+    else:
+        logging.warning('Failed creating normalisation')
 
 
 def rgb_intensity(raster_bands, type="luminance"):
@@ -49,6 +56,10 @@ def rgb_intensity(raster_bands, type="luminance"):
     :param raster_bands dictionary with the RGB bands
     :param type Type of intensity (only "luminance" supported) 
     """
+
+    if len(raster_bands) < 3:
+        logging.warning('Not enough bands to create intensity')
+        return
 
     if type.lower() == "luminance":
         return (0.3 * raster_bands[2] + 0.59 * raster_bands[1] + 0.11 * raster_bands[0])
@@ -66,8 +77,11 @@ def vegetation_index(raster_bands):
     elif len(raster_bands) >= 4:
         # GRVI = (NIR - Red) / (NIR + Red) "
         return np.divide(np.array(raster_bands[3], dtype="float32") - np.array(raster_bands[0], dtype="float32"),
-              np.array((raster_bands[3] + raster_bands[0]), dtype="float32"))
+                         np.array((raster_bands[3] + raster_bands[0]), dtype="float32"))
 
+    else:
+        logging.warning('Not enough bands to create vegetation index.')
+        return
 
 
 

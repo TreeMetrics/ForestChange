@@ -9,9 +9,10 @@
 # ==========================================================================================
 """ Basic tools for read and analyze _raster using gdal."""
 
-import warnings
+
 import os
 import numpy as np
+import logging
 from collections import namedtuple
 
 # import gdalconst
@@ -81,7 +82,7 @@ def file_import(file_path):
     """ Load a gdal file to local database """
 
     if not isvalid(file_path):
-        warnings.warn("File cannot be open. " + str(file_path) + ". Aborting ...")
+        logging.warning("File cannot be imported. " + str(file_path))
         return
 
     src = gdal.Open(file_path)
@@ -110,7 +111,7 @@ def isvalid(source):
     """ Check if the file is a valid gdal _raster"""
 
     if not source:
-        warnings.warn("GDAL source not defined.")
+        logging.warning("GDAL source not defined.")
         return False
 
     # Check if file
@@ -132,7 +133,7 @@ def isvalid(source):
     projection = ds.GetProjection()
     epsg, proj4 = wkt2epsg(projection)
     if not proj4 or proj4 == '':
-        warnings.warn("Data source has NOT projection information.")
+        logging.warning("Data source has NOT projection information.")
         return False
 
     return True
@@ -166,7 +167,7 @@ def np2type(data):
 
     if data.dtype == np.int64:
         # Note that Int64 is not supported for GDAL
-        warnings.warn('Int64 is not supported for GDAL')
+        logging.warning('Int64 is not supported for GDAL')
 
     return key
 
@@ -190,7 +191,8 @@ def py2gdal(src_array, file_path, ds_base, driver='GTiff', nodata=0, dtype=None)
     nbands = len(src_array)
 
     if rows != ds_base.RasterYSize or cols != ds_base.RasterXSize:
-        raise TypeError("Columss or rows are not matching the reference dataset")
+        logging.warning("Columns or rows are not matching the reference dataset")
+        return
 
     # Replace No data
     src_array[src_array == np.nan] = nodata
@@ -214,7 +216,7 @@ def py2gdal(src_array, file_path, ds_base, driver='GTiff', nodata=0, dtype=None)
         band.FlushCache()
 
     if not os.path.exists(file_path):
-        warnings.warn("Failed to create GeoTiff file. " + str(file_path))
+        logging.warning("Failed to create GeoTiff file. " + str(file_path))
         return
 
     return out_ds

@@ -37,6 +37,10 @@ def main(d1, d2, output, settings):
         'nodata', 'ds', 'array'"""
 
         d = gdalr.file_import(dataset)
+
+        if not d:
+            raise Exception("Error importing file: " + str(dataset))
+
         data_dict["d" + str(j)]["dataset"] = d
 
         # Re-arrange bands
@@ -52,18 +56,36 @@ def main(d1, d2, output, settings):
             if equalization:
                 d_array = tools.equalization(d_array)
 
+                if not d_array:
+                    raise Exception("Error in file equalization: " + str(dataset))
+
             if normalisation:
                 d_array = tools.normalisation(d_array)
+
+                if not d_array:
+                    raise Exception("Error in file normalisation: " + str(dataset))
 
             d_bands.append(d_array)
 
         data_dict["d" + str(j)]["normalised"] = d_bands
 
         # Get Intensity
-        data_dict["d" + str(j)]["intensity"] = tools.rgb_intensity(d_bands)
+        intensity = tools.rgb_intensity(d_bands)
+
+        if intensity:
+            data_dict["d" + str(j)]["intensity"] = tools.rgb_intensity(d_bands)
+
+        else:
+            raise Exception("Error calculation intensity for file: " + str(dataset))
 
         # Get Vegetation Index
-        data_dict["d" + str(j)]["vi"] = tools.vegetation_index(d_bands)
+        vi = tools.vegetation_index(d_bands)
+        
+        if vi:
+            data_dict["d" + str(j)]["vi"] = tools.vegetation_index(d_bands)
+
+        else:
+            raise Exception("Error calculation vegetation index for file: " + str(dataset))
 
 
     #Test outputs
