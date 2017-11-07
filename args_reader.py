@@ -14,8 +14,17 @@ import argparse
 import json
 
 from version import __version__, __date__, __copyright__
+from bunch import Config
+import config
 
-default_settings_file = os.path.join(os.getcwd(),"settings.json")
+
+config.check_config()
+
+if 'settings_file' in Config():
+    settings_json_path = Config()['settings_file']
+
+else:
+    raise Exception('Error reading config settings')
 
 
 class FileCheck(argparse.Action):
@@ -43,9 +52,8 @@ def read_json_file(filepath):
 
 
 def main():
-    ## Parse command line arguments
+    # Parse command line arguments
 
-    # Create the top-level parser
     parser = argparse.ArgumentParser(description='Tools for Forest Change Detection',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
@@ -66,40 +74,17 @@ def main():
     parser.add_argument("-o", "--output", required=True,
                         help="Output file path (TIF format)")
 
-    if os.path.isfile(default_settings_file):
+    profiles = read_json_file(settings_json_path)['profiles'].keys()
 
-        profiles = read_json_file(default_settings_file)['profiles'].keys()
-
-        parser.add_argument("-p", "--parameters", type=str, choices=profiles, default='sentinel_default', required=False,
-                            help="Profiles including the parameters for analysis. "
-                                 "Check 'settings.json' file to add/change an analysis profile")
-
-    else:
-        json_template = """ JSON Template: 
-        {"profiles": {
-        "sentinel_default": {
-        "source_name": "sentinel",
-        "bands": {
-        "red_band": 1,
-        "green_band": 3,
-        "blue_band": 1,
-        "nir_band": 8
-        },
-        "equalization":"False",
-        "normlisation":"False",
-        "segment_size": 2
-        }
-        }
-        }"""
-
-        raise TypeError("Please specify the parameters for analysis. JSON file with parameters is required: " +
-                        str(default_settings_file) + str(json_template))
+    parser.add_argument("-p", "--parameters", type=str, choices=profiles, default='sentinel_default', required=False,
+                        help="Profiles including the parameters for analysis. "
+                             "Check 'settings.json' file to add/change an analysis profile")
 
     # Check and get arguments
     args = parser.parse_args()
 
     # Read settings
-    parameters = read_json_file(os.path.join(os.getcwd(), "settings.json"))['profiles'][args.parameters]
+    parameters = read_json_file(settings_json_path)['profiles'][args.parameters]
     parameters = dump_into_namespace(parameters)
 
     args.parameters = parameters

@@ -13,8 +13,6 @@ import args_reader
 import test
 
 args = args_reader.main()
-
-print args
 test.main(d1=args.dataset1, d2=args.dataset2,output=args.output, settings=args.parameters)
 
 

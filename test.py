@@ -97,8 +97,6 @@ def main(d1, d2, output, settings):
 
     # Segmentation of newer dataset
 
-
-
     # Seed generation
 
     # Region growing
