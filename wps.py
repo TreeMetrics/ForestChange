@@ -4,8 +4,6 @@ Treemetrics forest change detection eo4a service.
 import logging
 import os
 
-import config
-
 from pywps import LiteralInput, LiteralOutput, UOM
 from pywps.app import EO4AProcess
 from pywps.app.Common import Metadata

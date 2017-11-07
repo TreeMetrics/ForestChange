@@ -68,8 +68,8 @@ def check_config():
     if not 'saga_bins' in envidic:
         envidic['saga_cmd'] = str(find_bins('saga_cmd')).strip()
 
-    if not os.path.exists(str(envidic['saga_bins'])):
-        raise Exception('Error finding SAGA bins. ' + str(envidic['saga_bins']))
+    if not os.path.exists(str(envidic['saga_cmd'])):
+        raise Exception('Error finding SAGA bins. ' + str(envidic['saga_cmd']))
 
     # Check setting file
     if os.path.exists(settings_json_path):
