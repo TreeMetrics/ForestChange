@@ -33,7 +33,7 @@ def equalization(raster_array, nan=0):
     # Replace nan values
     array_equalized[array_equalized == nan] = np.nan
 
-    if array_equalized and len(array_equalized) == len(raster_array):
+    if isinstance(array_equalized, (np.ndarray, np.generic)):
         return array_equalized
     else:
         logging.warning('Failed creating equalization')
@@ -45,7 +45,7 @@ def normalisation(raster_array):
 
     raster_array *= 255.0 / raster_array.max()
 
-    if raster_array:
+    if isinstance(raster_array, (np.ndarray, np.generic)):
         return raster_array
     else:
         logging.warning('Failed creating normalisation')

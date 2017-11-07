@@ -56,13 +56,13 @@ def main(d1, d2, output, settings):
             if equalization:
                 d_array = tools.equalization(d_array)
 
-                if not d_array:
+                if d_array is None:
                     raise Exception("Error in file equalization: " + str(dataset))
 
             if normalisation:
                 d_array = tools.normalisation(d_array)
 
-                if not d_array:
+                if d_array is None:
                     raise Exception("Error in file normalisation: " + str(dataset))
 
             d_bands.append(d_array)
@@ -72,7 +72,7 @@ def main(d1, d2, output, settings):
         # Get Intensity
         intensity = tools.rgb_intensity(d_bands)
 
-        if intensity:
+        if not intensity is None:
             data_dict["d" + str(j)]["intensity"] = tools.rgb_intensity(d_bands)
 
         else:
@@ -81,7 +81,7 @@ def main(d1, d2, output, settings):
         # Get Vegetation Index
         vi = tools.vegetation_index(d_bands)
         
-        if vi:
+        if not vi is None:
             data_dict["d" + str(j)]["vi"] = tools.vegetation_index(d_bands)
 
         else:
