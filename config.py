@@ -45,15 +45,7 @@ def find_bins(package_name):
 
 def check_config():
     """ Check configuration variables"""
-    print "!!!!!!!!!!!!!!!!!!!" + str(cmd('saga_cmd -v'))
-    logging.info(str(cmd('saga_cmd -v')) + "!!!!!!!!!!!!!!!!!!!")
-    logging.info('.')
-    logging.info('.')
-    logging.info('.')
-    logging.info('.')
-    logging.info('.')
-    logging.info(str(cmd('saga_cmd -v')) + "!!!!!!!!!!!!!!!!!!!")
-    print "!!!!!!!!!!!!!!!!!!!" + str(cmd('saga_cmd -v'))
+    print "Checking configuration variables: " + str(cmd('saga_cmd -v'))
 
     envidic = Config()
 
