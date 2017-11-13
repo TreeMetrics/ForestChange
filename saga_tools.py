@@ -174,7 +174,7 @@ def region_growing(input_grid, output, seeds_method='representativeness', thresh
 
     p('SEEDS').asGridList().Add_Item(input_grid)
 
-    #p(saga_api.CSG_String('SEEDS')).Set_Value(seeds_grid)
+    # p(saga_api.CSG_String('SEEDS')).Set_Value(seeds_grid)
     p(saga_api.CSG_String('FEATURES')).Set_Value(grids_list)
     p(saga_api.CSG_String('NEIGHBOUR')).Set_Value(1)
     p(saga_api.CSG_String('METHOD')).Set_Value(1)

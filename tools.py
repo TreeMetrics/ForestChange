@@ -33,10 +33,8 @@ class GeoPyTools(object):
     def _import2py(self, input_file, output=None):
 
         if os.path.exists(str(input_file)):
-            file_ext = os.path.splitext(input_file)[0]
-
             if os.path.splitext(input_file)[0] == '.sgrd':
-                input_file = os.path.join(os.path.splitext(input_file)[0] + '.sdat')
+                input_file = os.path.splitext(input_file)[0] + '.sdat'
 
             if gdalr.isvalid(input_file):
                 return gdalr.file_import(input_file)
@@ -46,12 +44,13 @@ class GeoPyTools(object):
                 return
 
         try:
-            array = input_file.array
-            return input_file
+            input_file.array
 
         except:
             logging.error('Error importing object. Format unknown.')
             return
+
+        return input_file
 
     def _array2raster(self, src_array, name, mask, nodata=0, ds=True, file_path=None):
         """ Provide the right format to PY/GDAL outputs"""
@@ -60,7 +59,7 @@ class GeoPyTools(object):
 
     def equalization(self, input_raster, nan=0):
         """Equalization of a 2D array with finite values
-        :param raster_array 2D array
+        :param input_raster 2D array
         :param nan no data value (finite value)"""
 
         input_raster = self._import2py(input_raster)
@@ -70,7 +69,7 @@ class GeoPyTools(object):
         for i in xrange(len(raster_arrays)):
 
             # Replace nan values
-            raster_array =raster_arrays[i]
+            raster_array = raster_arrays[i]
             raster_array[np.isnan(raster_array)] = nan
 
             # Equalize histogram
@@ -94,10 +93,9 @@ class GeoPyTools(object):
         name = os.path.splitext(input_raster.filename)[0] + '_eq' + os.path.splitext(input_raster.filename)[1]
         return self._array2raster(d_bands, name=name, mask=input_raster)
 
-
     def normalisation(self, input_raster):
         """Normalisation of a 2D array to 0-255 
-        :param raster_array 2D array"""
+        :param input_raster 2D array"""
 
         input_raster = self._import2py(input_raster)
         raster_arrays = input_raster.array
@@ -117,10 +115,9 @@ class GeoPyTools(object):
         name = os.path.splitext(input_raster.filename)[0] + '_norm' + os.path.splitext(input_raster.filename)[1]
         return self._array2raster(d_bands, name=name, mask=input_raster)
 
-
     def rgb_intensity(self, input_raster, type="luminance"):
         """ Intensity for rgb images 
-        :param raster_bands dictionary with the RGB bands
+        :param input_raster dictionary with the RGB bands
         :param type Type of intensity (only "luminance" supported) 
         """
         input_raster = self._import2py(input_raster)
@@ -141,7 +138,7 @@ class GeoPyTools(object):
 
     def vegetation_index(self, input_raster):
         """ Vegetation Index (GRVI, NDVI) for rgb/rgbnir images 
-        :param raster_bands dictionary with the RGB bands
+        :param input_raster dictionary with the RGB bands
         """
 
         input_raster = self._import2py(input_raster)
@@ -150,12 +147,12 @@ class GeoPyTools(object):
         if len(raster_bands) == 3:
             # GRVI = (Green - Red) / (Green + Red) "
             vi = np.divide(np.array(raster_bands[1], dtype="float32") - np.array(raster_bands[0], dtype="float32"),
-                             np.array((raster_bands[1] + raster_bands[0]), dtype="float32"))
+                           np.array((raster_bands[1] + raster_bands[0]), dtype="float32"))
 
         elif len(raster_bands) >= 4:
             # GRVI = (NIR - Red) / (NIR + Red) "
             vi = np.divide(np.array(raster_bands[3], dtype="float32") - np.array(raster_bands[0], dtype="float32"),
-                             np.array((raster_bands[3] + raster_bands[0]), dtype="float32"))
+                           np.array((raster_bands[3] + raster_bands[0]), dtype="float32"))
 
         else:
             logging.warning('Not enough bands to create vegetation index.')
@@ -202,7 +199,7 @@ class GeoPyTools(object):
         objects = defaultdict(list)
         [objects[zonesarr[i, j]].append([i, j]) for i, j in np.ndindex(zonesarr.shape)]
 
-        outputs={}
+        outputs = {}
         # Now, calculate the mean raster value per zonal dic "label" (table stats)
         if count:
             countdict = dict(zip(objects.keys(), [
@@ -215,8 +212,9 @@ class GeoPyTools(object):
             countarr[np.isnan(countarr)] = nodata
 
             # Create raster
-            outputs['count'] = (self._array2raster(countarr, name=str(raster.filename + '_count'), mask=raster, nodata=nodata))
-            countarr = None
+            outputs['count'] = (self._array2raster(countarr, name=str(raster.filename + '_count'), mask=raster,
+                                                   nodata=nodata))
+            del countarr
 
         if mean:
             meandic = dict(zip(objects.keys(), [
@@ -229,8 +227,9 @@ class GeoPyTools(object):
             meanarr[np.isnan(meanarr)] = nodata
 
             # Create raster
-            outputs['mean'] = (self._array2raster(meanarr, name=str(raster.filename + '_mean'), mask=raster, nodata=nodata))
-            meanarr = None
+            outputs['mean'] = (self._array2raster(meanarr, name=str(raster.filename + '_mean'), mask=raster,
+                                                  nodata=nodata))
+            del meanarr
 
         if stdev:
             stdndic = dict(zip(objects.keys(), [
@@ -244,16 +243,15 @@ class GeoPyTools(object):
 
             # Create raster
             outputs['stdev'] = (self._array2raster(stdarr, name=str(raster.filename + '_stdev'), mask=raster, nodata=nodata))
-            stdarr = None
+            del stdarr
 
-        zonesarr = None
-        valuesarr = None
+        del zonesarr
+        del valuesarr
 
         return outputs
 
     def single_band_calculator(self, rlist, expression, output=None):
         """ Raster calculator """
-
 
         logging.info('Initializing _raster calculator...')
         logging.info(expression)
@@ -279,7 +277,3 @@ class GeoPyTools(object):
 
 
         return self._array2raster(outarr, name=str(expression), mask=rlist[0], nodata=rlist[0].nodata, file_path=output)
-
-
-
-

@@ -33,15 +33,15 @@ class FileCheck(argparse.Action):
 
         if not prospective_file or not os.path.isfile(prospective_file):
             parser_i.print_help()
-            #print 'File does not exists. ' + str(prospective_file)
-            #exit()
+            # print 'File does not exists. ' + str(prospective_file)
+            # exit()
             raise Exception('File does not exists. ' + str(prospective_file))
 
         else:
             setattr(namespace, self.dest, prospective_file)
 
 
-class dump_into_namespace(object):
+class DumpIntoNamespace(object):
     def __init__(self, adict):
         self.__dict__.update(adict)
 
@@ -85,7 +85,7 @@ def main():
 
     # Read settings
     parameters = read_json_file(settings_json_path)['profiles'][args.parameters]
-    parameters = dump_into_namespace(parameters)
+    parameters = DumpIntoNamespace(parameters)
 
     args.parameters = parameters
     # args = vars(parser.parse_args())

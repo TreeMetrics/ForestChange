@@ -93,9 +93,10 @@ class ForestChange(EO4AProcess):
         return 'python  %s/forest_change -d1 %s -d2 %s -o %s' % (self._package_path,
                                                                  self._get_input(request, 'd1'),
                                                                  self._get_input(request, 'd2'),
-                                                                 os.path.join(self.output_dir,self._get_input(request, 'destfile')))
+                                                                 os.path.join(self.output_dir,
+                                                                              self._get_input(request, 'destfile')))
 
     def set_output(self, request, response):
         """Set the output in the WPS response."""
-        response.outputs['output'].data = os.path.join(self.output_dir,self._get_input(request, 'destfile'))
+        response.outputs['output'].data = os.path.join(self.output_dir, self._get_input(request, 'destfile'))
         response.outputs['output'].uom = UOM('unity')

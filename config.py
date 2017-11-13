@@ -92,6 +92,3 @@ def check_config():
         os.makedirs(tempdir)
 
     envidic['tempdir'] = tempdir
-
-
-

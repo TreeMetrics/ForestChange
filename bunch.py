@@ -6,7 +6,7 @@
 # DESCRIPTION: 	This module is a container for common process variables.
 
 # COPYRIGHT:	(C) 2017 Treemetrics. All rights reserved.
-#==========================================================================================
+# ==========================================================================================
 """  Manages common process settings, settings and other variables."""
 
 
@@ -30,8 +30,10 @@ class Config(object):
           for users to add new items to the registry in their config files
     """
 
-    def __init__(self, collection='default', overwrite=False, init={}):
+    def __init__(self, collection='default', overwrite=False, init=None):
 
+        if init is None:
+            init = {}
         self.overwrite = overwrite
         self.container = init
 
@@ -75,10 +77,6 @@ class Config(object):
 
         return self.container
 
-    #__getattr__ = __getitem__
-    #__setattr__ = __setitem__
-    #__delattr__ = __delitem__
-
 
 class Bunch(object):
     """ Container for private variables related with the processing."""
@@ -97,8 +95,10 @@ class Bunch(object):
           for users to add new items to the registry in their config files
     """
 
-    def __init__(self, collection='default', overwrite=False, init={}):
+    def __init__(self, collection='default', overwrite=False, init=None):
 
+        if init is None:
+            init = {}
         self.overwrite = overwrite
         self.container = init
 
@@ -145,6 +145,3 @@ class Bunch(object):
     __getattr__ = __getitem__
     __setattr__ = __setitem__
     __delattr__ = __delitem__
-
-
-

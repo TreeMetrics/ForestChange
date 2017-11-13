@@ -6,7 +6,7 @@
 # DESCRIPTION: 	This module contains Saga GIS utils.
 
 # COPYRIGHT:	(C) 2017 Treemetrics. All rights reserved.
-#==========================================================================================
+# ==========================================================================================
 """ This module runs Saga Gis utilities adapted to the Forest Spatial requirements. """
 
 import os
@@ -52,7 +52,7 @@ def _saga_cmd(*args):
     # New saga compatibility ("lib" is missing in libraries)
     arguments = ' '.join(args)
 
-    version = cmd(os.path.join(Config()['saga_cmd'] + ' -v'))
+    # version = cmd(os.path.join(Config()['saga_cmd'] + ' -v'))
 
     # Final command
     command = str(Config()['saga_cmd']) + " " + str(arguments)
@@ -99,11 +99,11 @@ class Saga(object):
             # Create output dictionary
             dic_bands = {}
 
-            #_saga_cmd('libio_gdal "GDAL: Import Raster" -GRIDS:"' + grid + '" -FILES="' + raster + '"') #-TRANSFORM
+            # _saga_cmd('libio_gdal "GDAL: Import Raster" -GRIDS:"' + grid + '" -FILES="' + raster + '"') #-TRANSFORM
 
             bands = ds.RasterCount
             for i in xrange(1, bands+1):
-                cmd("gdal_translate -of SAGA -b", str(i),'"' + ds_path + '" "' + grid_name + "_" + str(i) + '.sdat"')
+                cmd("gdal_translate -of SAGA -b", str(i), '"' + ds_path + '" "' + grid_name + "_" + str(i) + '.sdat"')
 
                 if os.path.exists(grid_name + "_" + str(i) + ".sgrd"):
                     dic_bands[str(i)] = grid_name + "_" + str(i) + ".sgrd"
@@ -131,7 +131,7 @@ class Saga(object):
 
         return output
 
-    def _import2saga(self, input_file, output=None):
+    def _import2saga(self, input_file):
 
         if os.path.exists(str(input_file)):
             file_ext = os.path.splitext(input_file)[0]

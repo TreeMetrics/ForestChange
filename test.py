@@ -9,10 +9,10 @@
 # ==========================================================================================
 """ This module is a test"""
 
-import os
 import gdal_reader as gdalr
 from tools import GeoPyTools as PyTools
 from saga_cmd import Saga
+
 
 def main(d1, d2, output, settings):
 
@@ -82,12 +82,10 @@ def main(d1, d2, output, settings):
 
     # Zonal stats for rasters
     stats1 = PyTools().zonal_stats(raster=data_dict["d1"]["intensity"], zones=segments,
-                                  output=None, count=False, mean=True, stdev=False, resize=True)
-
+                                   output=None, count=False, mean=True, stdev=False, resize=True)
 
     stats2 = PyTools().zonal_stats(raster=data_dict["d2"]["intensity"], zones=segments,
-                                  output=None, count=False, mean=True, stdev=False, resize=True)
-
+                                   output=None, count=False, mean=True, stdev=False, resize=True)
 
     diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b+1',
                                             output=output)
