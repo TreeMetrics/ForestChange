@@ -9,9 +9,10 @@
 # ==========================================================================================
 """ This module is a test"""
 
+import os
 import gdal_reader as gdalr
-import tools
-
+from tools import GeoPyTools as PyTools
+from saga_cmd import Saga
 
 def main(d1, d2, output, settings):
 
@@ -47,67 +48,48 @@ def main(d1, d2, output, settings):
         for bi in xrange(min(len(bands_schema), len(d.array))):
             d_array.append(d.array[bi])
 
+        d.array = d_array
+
         # Normalise
-        d_bands = []
-        for i in xrange(d.bands):
+        if equalization:
+            d = PyTools().equalization(d)
 
-            d_array = d.array[i]
-            if equalization:
-                d_array = tools.equalization(d_array)
+        if normalisation:
+            d = PyTools().normalisation(d)
 
-                if d_array is None:
-                    raise Exception("Error in file equalization: " + str(dataset))
-
-            if normalisation:
-                d_array = tools.normalisation(d_array)
-
-                if d_array is None:
-                    raise Exception("Error in file normalisation: " + str(dataset))
-
-            d_bands.append(d_array)
-
-        data_dict["d" + str(j)]["normalised"] = d_bands
+        data_dict["d" + str(j)]["normalised"] = d
 
         # Get Intensity
-        intensity = tools.rgb_intensity(d_bands)
+        intensity = PyTools().rgb_intensity(d)
 
-        if not intensity is None:
-            data_dict["d" + str(j)]["intensity"] = tools.rgb_intensity(d_bands)
+        if intensity:
+            data_dict["d" + str(j)]["intensity"] = intensity
 
         else:
             raise Exception("Error calculation intensity for file: " + str(dataset))
 
         # Get Vegetation Index
-        vi = tools.vegetation_index(d_bands)
-        
-        if not vi is None:
-            data_dict["d" + str(j)]["vi"] = tools.vegetation_index(d_bands)
+        vi = PyTools().vegetation_index(d)
+
+        if vi:
+            data_dict["d" + str(j)]["vi"] = vi
 
         else:
             raise Exception("Error calculation vegetation index for file: " + str(dataset))
 
-
-    #Test outputs
-    import os
-    gdalr.py2gdal(data_dict["d1"]["intensity"], str(os.path.splitext(output)[0]) + '.tif', data_dict["d1"]["dataset"].ds, driver='GTiff', nodata=0, dtype=None)
-    #gdalr.py2gdal(data_dict["d1"]["vi"], os.path.join(os.getcwd(), "veg.tif"), data_dict["d1"]["dataset"].ds, driver='GTiff', nodata=0, dtype=None)
-    #gdalr.py2gdal(data_dict["d1"]["normalised"], os.path.join(os.getcwd(), "nor.tif"), data_dict["d1"]["dataset"].ds, driver='GTiff', nodata=0, dtype=None)
-    #print os.path.join(os.getcwd(),"int.tif")
-
-    # Segmentation of newer dataset
-
-    # Seed generation
-
-    # Region growing
-
-
+    # Segmentation of the dataset
+    segments = Saga().region_growing(rlist=[data_dict["d1"]["intensity"]], output=None)
 
     # Zonal stats for rasters
+    stats1 = PyTools().zonal_stats(raster=data_dict["d1"]["intensity"], zones=segments,
+                                  output=None, count=False, mean=True, stdev=False, resize=True)
 
 
-    # Segments diference
+    stats2 = PyTools().zonal_stats(raster=data_dict["d2"]["intensity"], zones=segments,
+                                  output=None, count=False, mean=True, stdev=False, resize=True)
 
 
+    diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b+1',
+                                            output=output)
 
-
-    exit()
+    return diff

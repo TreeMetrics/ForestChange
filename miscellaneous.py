@@ -26,6 +26,7 @@ def cmd(*args):
         args = list(args)
 
     cmdstr = ' '.join(args)
+
     proc = subprocess.Popen([cmdstr], shell=True, stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
     return out

@@ -18,6 +18,7 @@ from bunch import Config
 import logging
 
 settings_json_path = os.path.join(os.path.dirname(__file__), "settings.json")
+tempdir = os.path.join('/home/puter/Documents/temp')
 
 json_template = """ JSON Template: 
     {"profiles": {
@@ -45,7 +46,7 @@ def find_bins(package_name):
 
 def check_config():
     """ Check configuration variables"""
-    print "Checking configuration variables: " + str(cmd('saga_cmd -v'))
+    logging.info("Checking configuration variables: " + str(cmd('saga_cmd -v')))
 
     envidic = Config()
 
@@ -81,3 +82,16 @@ def check_config():
                       str(Config()["settings_file"]) + str(json_template))
 
         raise Exception('Settings file "settings.json" cannot be found. Aborting...')
+
+    # Check setting file
+    if not tempdir:
+        logging.error("Please specify the temp directory.")
+        raise Exception('temp directory cannot be found. Aborting...')
+
+    if not os.path.exists(tempdir):
+        os.makedirs(tempdir)
+
+    envidic['tempdir'] = tempdir
+
+
+

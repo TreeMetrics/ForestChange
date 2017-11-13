@@ -31,6 +31,18 @@ except ImportError:
 # Register all drivers
 gdal.AllRegister()
 
+NP2GDAL = {
+  "uint8": 1,
+  "int8": 1,
+  "uint16": 2,
+  "int16": 3,
+  "uint32": 4,
+  "int32": 5,
+  "float32": 6,
+  "float64": 7,
+  "complex64": 10,
+  "complex128": 11}
+
 
 class Gdal2Py(object):
     """A class holding information about a ogr feature"""
@@ -40,42 +52,68 @@ class Gdal2Py(object):
     # Prevents to create dictionaries (low memory).
     __slots__ = ('type', 'filename', 'projection', 'xsize', 'ysize',
                  'yres', 'xres', 'extent', 'bands',
-                 'band_type', 'nodata', 'ds', 'array')
+                 'dtype', 'nodata', 'ds', 'array', 'epsg')
 
     def __init__(self, ds, data=True):
         """ Read gdal data source (instance variable) """
 
-        # if ds is None:
-        #     return
-        self.type = 'gdal'
-        self.filename = ds.GetMetadataItem('FilePath')
+        if str(ds).lower() == 'new':
+            self.type = 'gdal'
+            self.filename = None
+            self.ds = None
+            self.projection = None
+            self.epsg = None
+            self.bands = None
+            self.dtype = None
+            self.nodata = None
+            self.xsize = None
+            self.ysize = None
+            self.xres = None
+            self.yres = None
+            self.extent = None
+            self.array = None
 
-        geotransform = ds.GetGeoTransform()
+        else:
+            self.type = 'gdal'
+            self.filename = ds.GetMetadataItem('FilePath')
 
-        self.ds = ds
-        self.projection = ds.GetProjection()
-        self.bands = ds.RasterCount
-        self.band_type = ds.GetRasterBand(1).DataType
-        self.nodata = ds.GetRasterBand(1).GetNoDataValue()
+            geotransform = ds.GetGeoTransform()
 
-        # Handy _raster attributes
-        self.xsize = ds.RasterXSize
-        self.ysize = ds.RasterYSize
-        self.xres = geotransform[1]
-        self.yres = geotransform[5]
+            self.ds = ds
+            self.projection = ds.GetProjection()
+            self.epsg = wkt2epsg(ds.GetProjection())[0]
+            self.bands = ds.RasterCount
+            self.dtype = ds.GetRasterBand(1).DataType
+            self.nodata = ds.GetRasterBand(1).GetNoDataValue()
 
-        xmin = geotransform[0]
-        ymax = geotransform[3]
-        xmax = geotransform[0] + geotransform[1] * ds.RasterXSize
-        ymin = ymax + geotransform[5] * ds.RasterYSize
+            # Handy _raster attributes
+            self.xsize = ds.RasterXSize
+            self.ysize = ds.RasterYSize
+            self.xres = geotransform[1]
+            self.yres = geotransform[5]
 
-        self.extent = Gdal2Py.extent_tuple(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+            xmin = geotransform[0]
+            ymax = geotransform[3]
+            xmax = geotransform[0] + geotransform[1] * ds.RasterXSize
+            ymin = ymax + geotransform[5] * ds.RasterYSize
 
-        # Data & data structure
-        if data:
-            self.array = ds2array(ds)
+            self.extent = Gdal2Py.extent_tuple(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
 
-        # ds.GetMetadata('IMAGE_STRUCTURE')
+            # Data & data structure
+            if data:
+                self.array = ds2array(ds)
+
+            # ds.GetMetadata('IMAGE_STRUCTURE')
+
+
+def wkt2epsg(wkt):
+    srs = osr.SpatialReference()
+    srs.SetFromUserInput(wkt)
+
+    proj4 = srs.ExportToProj4()
+    epsg = srs.GetAttrValue("AUTHORITY", 1)
+
+    return epsg, proj4
 
 
 def file_import(file_path):
@@ -88,16 +126,22 @@ def file_import(file_path):
     src = gdal.Open(file_path)
     src.SetMetadataItem('FilePath', file_path)
 
-    #driver = gdal.GetDriverByName('MEM')
-    #data_source = driver.CreateCopy(file_path, src, 0)
+    # driver = gdal.GetDriverByName('MEM')
+    # data_source = driver.CreateCopy(file_path, src, 0)
 
     return Gdal2Py(ds=src, data=True)
 
 
 def ds2array(ds):
     """Convert ds to python array"""
-    nodata = ds.GetRasterBand(1).GetNoDataValue()
+
+    # Dected array type, Numpy nan is only compatible with float64
+    # dtype = [key for key, value in NP2GDAL.iteritems() if value == ds.GetRasterBand(1).DataType][0]
+    # numpy_array = getattr(np, dtype)
+    # arr = numpy_array(gdal_array.DatasetReadAsArray(ds))
+
     arr = np.float64(gdal_array.DatasetReadAsArray(ds))
+    nodata = ds.GetRasterBand(1).GetNoDataValue()
     arr[arr == nodata] = np.nan
 
     if ds.RasterCount == 1:
@@ -111,7 +155,7 @@ def isvalid(source):
     """ Check if the file is a valid gdal _raster"""
 
     if not source:
-        logging.warning("GDAL source not defined.")
+        logging.error("GDAL source not defined.")
         return False
 
     # Check if file
@@ -124,14 +168,20 @@ def isvalid(source):
         ds = source
 
     # Check data source
-    for i in xrange(ds.RasterCount):
-        ds.GetRasterBand(1).Checksum()
-        if gdal.GetLastErrorType() != 0:
-            return False
+    try:
+        for i in xrange(ds.RasterCount):
+            ds.GetRasterBand(1).Checksum()
+            if gdal.GetLastErrorType() != 0:
+                return False
 
-    # Check data projection
-    projection = ds.GetProjection()
-    epsg, proj4 = wkt2epsg(projection)
+        # Check data projection
+        projection = ds.GetProjection()
+        epsg, proj4 = wkt2epsg(projection)
+
+    except:
+        logging.error("GDAL source cannot be read.")
+        return False
+
     if not proj4 or proj4 == '':
         logging.warning("Data source has NOT projection information.")
         return False
@@ -139,18 +189,7 @@ def isvalid(source):
     return True
 
 
-def wkt2epsg(wkt):
-    srs = osr.SpatialReference()
-    srs.SetFromUserInput(wkt)
-
-    proj4 = srs.ExportToProj4()
-    epsg = srs.GetAttrValue("AUTHORITY", 1)
-
-    return epsg, proj4
-
-
 def np2type(data):
-
     np2gdal = {GDT_Byte: np.uint8,
                GDT_UInt16: np.uint16,
                GDT_Int16: np.int16,
@@ -168,55 +207,140 @@ def np2type(data):
     if data.dtype == np.int64:
         # Note that Int64 is not supported for GDAL
         logging.warning('Int64 is not supported for GDAL')
+        return 'GDT_Int32'
 
     return key
 
 
-def py2gdal(src_array, file_path, ds_base, driver='GTiff', nodata=0, dtype=None):
+def py2gdal(py_raster, file_path=None):
 
-    # Get required info from ds_base
-    driver = gdal.GetDriverByName(driver)
-    geotransform = ds_base.GetGeoTransform()
-    projection = ds_base.GetProjection()
+    if not file_path:
+        driver_name = 'MEM'
+        driver = gdal.GetDriverByName(driver_name)
+        file_path = py_raster.filename
 
-    # Conver to a 3D numpy array if required
-    if isinstance(src_array, list):
-        src_array = np.array(src_array)
+    else:
+        if os.path.splitext(file_path)[1].lower() == '.tif' or os.path.splitext(file_path)[1].lower == '.tiff':
+            driver_name = 'GTiff'
+            driver = gdal.GetDriverByName(driver_name)
+            file_path = os.path.splitext(file_path)[0] + '.tif'
 
-    if len(src_array.shape) <= 2:
-        src_array = np.array([src_array])
+        elif os.path.splitext(file_path)[1].lower() == '.sgrd' or os.path.splitext(file_path)[1].lower == '.sdat':
+            driver_name = 'SAGA'
+            driver = gdal.GetDriverByName(driver_name)
+            file_path = os.path.splitext(file_path)[0] + '.sdat'
 
-    cols = len(src_array[0][0])
-    rows = len(src_array[0])
-    nbands = len(src_array)
+        else:
+            logging.warning("Failed to load driver for file. " + str(file_path))
+            return
 
-    if rows != ds_base.RasterYSize or cols != ds_base.RasterXSize:
-        logging.warning("Columns or rows are not matching the reference dataset")
-        return
+        if os.path.exists(file_path):
+            i = 0
+            while os.path.exists(file_path):
+                i += 1
+                file_path = str(os.path.splitext(file_path)[0]) + '_' + str(i) + os.path.splitext(file_path)[1]
+
+    geotransform = (py_raster.extent[0], py_raster.xres, 0, py_raster.extent[3], 0, -py_raster.yres)
+
+    out_ds = driver.Create(file_path, py_raster.xsize, py_raster.ysize, py_raster.bands, py_raster.dtype)
+    out_ds.SetMetadataItem('FilePath', py_raster.filename)
+    out_ds.SetGeoTransform(geotransform)
+    out_ds.SetProjection(py_raster.projection)
 
     # Replace No data
-    src_array[src_array == np.nan] = nodata
+    src_array = py_raster.array
+    src_array[src_array == np.nan] = py_raster.nodata
 
-    # Get dtype from array
-    if not dtype:
-        if src_array.dtype == np.int64:
-            for bid1 in xrange(nbands):
-                src_array[bid1] = src_array[bid1].astype(np.int32)
-
-        dtype = np2type(src_array[0])
-
-    out_ds = driver.Create(file_path, cols, rows, nbands, dtype)
-    out_ds.SetGeoTransform(geotransform)
-    out_ds.SetProjection(projection)
-
-    for bid in xrange(nbands):
+    # Write bands
+    for bid in xrange(py_raster.bands):
         band = out_ds.GetRasterBand(bid + 1)
         band.WriteArray(src_array[bid], 0, 0)
-        out_ds.GetRasterBand(bid + 1).SetNoDataValue(nodata)
+        out_ds.GetRasterBand(bid + 1).SetNoDataValue(py_raster.nodata)
         band.FlushCache()
 
-    if not os.path.exists(file_path):
-        logging.warning("Failed to create GeoTiff file. " + str(file_path))
+    # Check tif file
+    if driver_name == 'MEM':
+        return out_ds
+
+    if os.path.exists(file_path):
+        return file_path
+
+    else:
+        logging.warning("Failed to create GDAL file. " + str(file_path))
         return
 
-    return out_ds
+
+def array2raster(src_array, name, mask=None, geotransform=None, projection=None, nodata=0, ds=False, file_path=None):
+
+    new_raster = Gdal2Py(ds='new')
+
+    if file_path:
+        name = file_path
+
+    new_raster.filename = name
+
+    # No data
+    if mask:
+        new_raster.nodata = mask.nodata
+
+    else:
+        new_raster.nodata = nodata
+
+    # Size and bands
+    if src_array.ndim == 2:
+        new_raster.bands = 1
+        new_raster.xsize = len(src_array[0])
+        new_raster.ysize = len(src_array)
+        new_raster.array = np.array([src_array])
+        new_raster.dtype = np2type(src_array)
+
+    elif src_array.ndim == 3:
+        new_raster.bands = len(src_array)
+        new_raster.xsize = len(src_array[0][0])
+        new_raster.ysize = len(src_array[0])
+        new_raster.array = src_array
+        new_raster.dtype = np2type(src_array[0])
+
+    else:
+        logging.error('Creating new Py raster failed. Number of bands is not recognised.')
+        return
+
+    # Geotransform
+    if geotransform and len(geotransform) == 6:
+        new_raster.xres = geotransform[1]
+        new_raster.yres = geotransform[5]
+        xmin = geotransform[0]
+        ymax = geotransform[3]
+        xmax = geotransform[0] + geotransform[1] * new_raster.xsize
+        ymin = ymax + geotransform[5] * new_raster.ysize
+
+        new_raster.extent = Gdal2Py.extent_tuple(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax)
+
+    else:
+
+        if mask:
+            new_raster.xres = mask.xres
+            new_raster.yres = mask.xres
+            new_raster.extent = mask.extent
+
+        else:
+            logging.error('Creating new Py raster failed. Geotransform are not defined.')
+            return
+
+    # Projection
+    if projection:
+        new_raster.projection = projection
+
+    else:
+        if mask:
+            new_raster.projection = mask.projection
+            new_raster.epsg = mask.epsg
+
+        else:
+            logging.error('Creating new Py raster failed. Projection are not defined.')
+            return
+
+    if ds:
+        new_raster.ds = py2gdal(py_raster=new_raster, file_path=file_path)
+
+    return new_raster
