@@ -9,8 +9,23 @@
 # ==========================================================================================
 """ This module manages the analysis and outputs"""
 
-import args_reader
-import test
+import os
+import shutil
 
+import config
+import args_reader
+import change_script
+from bunch import Config
+
+# Check configuration
+config.check_config()
+
+# Read args
 args = args_reader.main()
-test.main(d1=args.dataset1, d2=args.dataset2, output=args.output, settings=args.parameters)
+
+# Runs script
+change_script.main(d1=args.dataset1, d2=args.dataset2, output=args.output, settings=args.parameters)
+
+# Wipe temp files
+if 'tempdir' in Config() and os.path.exists(Config()['tempdir']):
+    shutil.rmtree(Config()['tempdir'])

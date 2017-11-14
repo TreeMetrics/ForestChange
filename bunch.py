@@ -30,14 +30,12 @@ class Config(object):
           for users to add new items to the registry in their config files
     """
 
-    def __init__(self, collection='default', overwrite=False, init=None):
+    def __init__(self, collection='default', overwrite=False, init={}):
 
-        if init is None:
-            init = {}
         self.overwrite = overwrite
         self.container = init
 
-        if not collection in self.container:
+        if collection not in self.container:
             self.container[collection] = {}
 
         self.container = self.container[collection]
@@ -53,7 +51,7 @@ class Config(object):
 
     def __getitem__(self, key):
 
-        if not key in self.container.keys():
+        if key not in self.container.keys():
             logging.error(msg='Variable "' + str(key) + '" in not defined. Set variable fist.')
             return
 
@@ -73,7 +71,7 @@ class Config(object):
     def __getstate__(self):
         return self.__dict__.items()
 
-    def list(self):
+    def asdict(self):
 
         return self.container
 
@@ -95,14 +93,12 @@ class Bunch(object):
           for users to add new items to the registry in their config files
     """
 
-    def __init__(self, collection='default', overwrite=False, init=None):
+    def __init__(self, collection='default', overwrite=False, init={}):
 
-        if init is None:
-            init = {}
         self.overwrite = overwrite
         self.container = init
 
-        if not collection in self.container:
+        if collection not in self.container:
             self.container[collection] = {}
 
         self.container = self.container[collection]
@@ -118,7 +114,7 @@ class Bunch(object):
 
     def __getitem__(self, key):
 
-        if not key in self.container.keys():
+        if key not in self.container.keys():
             logging.error(msg='Variable "' + str(key) + '" in not defined. Set variable fist.')
             return
 
@@ -138,7 +134,7 @@ class Bunch(object):
     def __getstate__(self):
         return self.__dict__.items()
 
-    def list(self):
+    def asdict(self):
 
         return self.container
 

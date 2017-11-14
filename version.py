@@ -6,7 +6,7 @@
 # DESCRIPTION: 	This module prints the current version.
 
 # (C) 2017 Treemetrics All rights reserved.
-#==========================================================================================
+# ==========================================================================================
 """This module contains the current version number."""
 
 # Important: Version defined according PEP 8 and PEP 386 rules.

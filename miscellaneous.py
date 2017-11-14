@@ -30,3 +30,18 @@ def cmd(*args):
     proc = subprocess.Popen([cmdstr], shell=True, stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
     return out
+
+
+def dict_find(key, dictionary):
+    """ Find recursively item in dict"""
+
+    for k, v in dictionary.iteritems():
+        if k == key:
+            yield v
+        elif isinstance(v, dict):
+            for result in dict_find(key, v):
+                yield result
+        elif isinstance(v, list):
+            for d in v:
+                for result in dict_find(key, d):
+                    yield result

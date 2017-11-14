@@ -1,7 +1,7 @@
 # /usr/bin/env python
 
 # PROJECT:	    EO4Atlantic
-# MODULE:		test.py
+# MODULE:		change_script.py
 # AUTHOR:		Treemetrics
 # DESCRIPTION: 	This module is a test.
 

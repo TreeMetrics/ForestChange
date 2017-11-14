@@ -3,7 +3,7 @@
 # PROJECT:	    EO4Atlantic
 # MODULE:		args_reader.py
 # AUTHOR:		Treemetrics
-# DESCRIPTION: 	This module manages the analysis and the outputs.
+# DESCRIPTION: 	This module manages the inputs and outputs.
 
 # COPYRIGHT:	(C) 2017 Treemetrics all rights reserved.
 # ==========================================================================================
@@ -15,16 +15,6 @@ import json
 
 from version import __version__, __date__, __copyright__
 from bunch import Config
-import config
-
-
-config.check_config()
-
-if 'settings_file' in Config():
-    settings_json_path = Config()['settings_file']
-
-else:
-    raise Exception('Error reading config settings')
 
 
 class FileCheck(argparse.Action):
@@ -51,6 +41,13 @@ def read_json_file(filepath):
         return json.load(data_file)
 
 
+def get_settings_profiles(json_file):
+
+    profiles = read_json_file(json_file)['profiles'].keys()
+
+    return profiles
+
+
 def main():
     # Parse command line arguments
 
@@ -74,16 +71,20 @@ def main():
     parser.add_argument("-o", "--output", required=True,
                         help="Output file path (TIF format)")
 
-    profiles = read_json_file(settings_json_path)['profiles'].keys()
+    # Read settings
+    if 'settings_file' in Config():
+        settings_json_path = Config()['settings_file']
 
-    parser.add_argument("-p", "--parameters", type=str, choices=profiles, default='sentinel_default', required=False,
+    else:
+        raise Exception('Error reading config settings')
+
+    parser.add_argument("-p", "--parameters", type=str, choices=get_settings_profiles(settings_json_path),
+                        default='sentinel_default', required=False,
                         help="Profiles including the parameters for analysis. "
                              "Check 'settings.json' file to add/change an analysis profile")
 
     # Check and get arguments
     args = parser.parse_args()
-
-    # Read settings
     parameters = read_json_file(settings_json_path)['profiles'][args.parameters]
     parameters = DumpIntoNamespace(parameters)
 
