@@ -11,6 +11,8 @@
 
 import os
 import shutil
+import errno
+import logging
 
 import config
 import args_reader
@@ -22,6 +24,26 @@ config.check_config()
 
 # Read args
 args = args_reader.main()
+
+# Set tempdir
+if 'tempdir' in args and args.tempdir:
+    tempdir = args.tempdir
+
+elif 'dataset1' in args:
+    tempdir = os.path.join(os.path.dirname(args.dataset1), 'temp')
+
+else:
+    raise Exception("Temporary directory cannot not been defined. Aborting ..")
+
+if not os.path.exists(tempdir):
+    try:
+        os.makedirs(tempdir)
+
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise Exception("Error creating temporary directory:" + str(tempdir))
+
+Config()['tempdir'] = tempdir
 
 # Runs script
 change_script.main(d1=args.dataset1, d2=args.dataset2, output=args.output, settings=args.parameters)

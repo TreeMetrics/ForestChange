@@ -71,6 +71,9 @@ def main():
     parser.add_argument("-o", "--output", required=True,
                         help="Output file path (TIF format)")
 
+    parser.add_argument("--tempdir", required=False,
+                        help="Temporal directory")
+
     # Read settings
     if 'settings_file' in Config():
         settings_json_path = Config()['settings_file']

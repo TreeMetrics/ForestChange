@@ -83,23 +83,14 @@ def check_config():
 
     settings_json_path = list(dict_find('settings_json_path', config_dict))[0]
     if os.path.exists(settings_json_path):
-        envidic['settings_file'] = settings_json_path
+        if os.path.isabs(settings_json_path):
+            envidic['settings_file'] = settings_json_path
+
+        else:
+            envidic['settings_file'] = os.path.join(os.path.dirname(__file__), settings_json_path)
 
     else:
         logging.error("Please specify the parameters for analysis. JSON file with parameters is required: " +
                       str(Config()["settings_file"]))
 
         raise Exception('Settings file "settings.json" cannot be found. Aborting...')
-
-    # Check setting file
-    if not len(list(dict_find('tempdir', config_dict))) > 0:
-        raise Exception('Error reading "config.cfg", variable "tempdir" not found. Aborting...')
-
-    tempdir = list(dict_find('tempdir', config_dict))[0]
-    if not os.path.exists(tempdir):
-        os.makedirs(tempdir)
-        envidic['tempdir'] = tempdir
-
-    else:
-        logging.error("Please specify the temp directory.")
-        raise Exception('temp directory cannot be found. Aborting...')
