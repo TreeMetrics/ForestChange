@@ -3,6 +3,7 @@ Treemetrics forest change detection eo4a service.
 """
 import logging
 import os
+import tempfile
 
 from pywps import LiteralInput, LiteralOutput, UOM
 from pywps.app import EO4AProcess
@@ -87,12 +88,15 @@ class ForestChange(EO4AProcess):
         string
             The service command to be executed.
         """
+        self.temp_path = tempfile.mkdtemp(dir=self.output_dir)
+        logger.info('Tempdir: %s', self.temp_path)
         logger.info('Request inputs: %s', request.inputs)
 
         # Capture gdalinfo output in a temp file
-        return 'python  %s/forest_change -d1 %s -d2 %s -o %s' % (self._package_path,
+        return 'python  %s/forest_change -d1 %s -d2 %s --tempdir %s -o %s' % (self._package_path,
                                                                  self._get_input(request, 'd1'),
                                                                  self._get_input(request, 'd2'),
+                                                                 self.temp_path,
                                                                  os.path.join(self.output_dir,
                                                                               self._get_input(request, 'destfile')))
 
@@ -100,3 +104,4 @@ class ForestChange(EO4AProcess):
         """Set the output in the WPS response."""
         response.outputs['output'].data = os.path.join(self.output_dir, self._get_input(request, 'destfile'))
         response.outputs['output'].uom = UOM('unity')
+        os.rmdir(self.temp_path)
