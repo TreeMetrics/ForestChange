@@ -83,11 +83,10 @@ def check_config():
 
     settings_json_path = list(dict_find('settings_json_path', config_dict))[0]
     if os.path.exists(settings_json_path):
-        if os.path.isabs(settings_json_path):
-            envidic['settings_file'] = settings_json_path
+        envidic['settings_file'] = settings_json_path
 
-        else:
-            envidic['settings_file'] = os.path.join(os.path.dirname(__file__), settings_json_path)
+    elif os.path.exists(os.path.join(os.path.dirname(__file__), settings_json_path)):
+        envidic['settings_file'] = os.path.join(os.path.dirname(__file__), settings_json_path)
 
     else:
         logging.error("Please specify the parameters for analysis. JSON file with parameters is required: " +

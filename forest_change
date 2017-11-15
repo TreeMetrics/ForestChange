@@ -12,7 +12,6 @@
 import os
 import shutil
 import errno
-import logging
 
 import config
 import args_reader
