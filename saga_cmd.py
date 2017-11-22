@@ -108,6 +108,7 @@ class Saga(object):
                 if os.path.exists(grid_name + "_" + str(i) + ".sgrd"):
                     dic_bands[str(i)] = grid_name + "_" + str(i) + ".sgrd"
 
+
             return dic_bands
 
         else:
@@ -150,7 +151,7 @@ class Saga(object):
                     logging.error('Error importing file to SAGA. Format unknown.')
                     return
 
-        # Check python objec in the memory
+        # Check python objecT in the memory
         try:
             input_file.ds
 
@@ -158,7 +159,7 @@ class Saga(object):
             logging.error('Error importing object to SAGA. Format unknown.')
             return
 
-        # Create sgrd file
+        # Create .sgrd file
         name = os.path.splitext(os.path.basename(input_file.filename))[0]
         if not name:
             name = 'grid'
@@ -187,7 +188,7 @@ class Saga(object):
 
         elif not output:
             # OP2: Python
-            return gdalr.file_import(os.path.splitext(sgrd_file)[0] + '.sdat')
+            return gdalr.gdal_import(os.path.splitext(sgrd_file)[0] + '.sdat')
 
         else:
             logging.error('Error _saga2output. Format unknown.')
@@ -208,23 +209,22 @@ class Saga(object):
         cmd_list = ';'.join(gridlist)
 
         # Get seeds
-        # os.path.join(tempdir, 'mask.sgrd')
-        mask = gridlist[0]
-
+        mask = os.path.join(tempdir, 'mask.sgrd')
         gseeds = os.path.join(tempdir, 'seeds.sgrd')
 
         if not seeds:
             # Create Seeds from raster
-            grid_seeds = mask
             representativeness = os.path.join(tempdir, 'representativeness.sgrd')
             surface = os.path.join(tempdir, 'surface.sgrd')
 
-            _saga_cmd('statistics_grid 0 -INPUT="' + grid_seeds + '" -RESULT="' + representativeness +
+            _saga_cmd('statistics_grid 0 -INPUT="' + gridlist[0] + '" -RESULT="' + representativeness +
                       '" -RESULT_LOD="' + surface + '" -SEEDS="' + gseeds + '" -LOD=' + str(lod))
 
-            # Mask seeds
-            _saga_cmd('grid_tools 15', '-INPUT="' + grid_seeds + '" -RESULT="' + mask +
+            # Create mask
+            _saga_cmd('grid_tools 15', '-INPUT="' + gridlist[0] + '" -RESULT="' + mask +
                       '" -METHOD=0 -OLD=-100 -NEW=1 -SOPERATOR=3')
+
+            # Mask seeds
             _saga_cmd('grid_tools 24', '-GRID:"' + gseeds + '"', '-MASK:"' + mask + '"', '-MASKED:"' + gseeds + '"')
 
         elif seeds:
@@ -242,6 +242,7 @@ class Saga(object):
         outgrid = os.path.join(tempdir, 'segments.sgrd')
         outgrid1 = os.path.join(tempdir, 'Similarity.sgrd')
         outgrid2 = os.path.join(tempdir, 'table.dbf')
+
 
         _saga_cmd('imagery_segmentation 3 -SEEDS="' + gseeds + '" -FEATURES="' + cmd_list +
                   '" -SEGMENTS="' + outgrid + '" -SIMILARITY="' + outgrid1 + '" -TABLE="' + outgrid2 +

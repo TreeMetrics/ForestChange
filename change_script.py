@@ -9,8 +9,7 @@
 # ==========================================================================================
 """ This module is a test"""
 
-import gdal_reader as gdalr
-from tools import GeoPyTools as PyTools
+from toolbox import RasterTools as PyTools
 from saga_cmd import Saga
 
 
@@ -18,10 +17,6 @@ def main(d1, d2, output, settings):
 
     equalization = settings.equalization
     normalisation = settings.normalisation
-    bands_schema = [settings.bands["red_band"], settings.bands["green_band"], settings.bands["blue_band"]]
-
-    if "nir_band" in settings.bands:
-        bands_schema.append(settings.bands["nir_band"])
 
     # Pre-processing for both datasets
     data_dict = {}
@@ -31,36 +26,19 @@ def main(d1, d2, output, settings):
         # Data storage dict
         j += 1
         data_dict["d" + str(j)] = {}
-
-        # Import files
-        """'type', 'filename', 'projection', 'xsize', 'ysize', 'yres', 'xres', 'extent', 'bands', 'band_type', 
-        'nodata', 'ds', 'array'"""
-
-        d = gdalr.file_import(dataset)
-
-        if not d:
-            raise Exception("Error importing file: " + str(dataset))
-
-        data_dict["d" + str(j)]["dataset"] = d
-
-        # Re-arrange bands
-        d_array = []
-        for bi in xrange(min(len(bands_schema), len(d.array))):
-            d_array.append(d.array[bi])
-
-        d.array = d_array
+        data_dict["d" + str(j)]["dataset"] = dataset
 
         # Normalise
         if equalization:
-            d = PyTools().equalization(d)
+            dataset = PyTools().equalization(dataset)
 
         if normalisation:
-            d = PyTools().normalisation(d)
+            dataset = PyTools().normalisation(dataset)
 
-        data_dict["d" + str(j)]["normalised"] = d
+        data_dict["d" + str(j)]["normalised"] = dataset
 
         # Get Intensity
-        intensity = PyTools().rgb_intensity(d)
+        intensity = PyTools().rgb_intensity(dataset)
 
         if intensity:
             data_dict["d" + str(j)]["intensity"] = intensity
@@ -69,7 +47,7 @@ def main(d1, d2, output, settings):
             raise Exception("Error calculation intensity for file: " + str(dataset))
 
         # Get Vegetation Index
-        vi = PyTools().vegetation_index(d)
+        vi = PyTools().vegetation_index(dataset)
 
         if vi:
             data_dict["d" + str(j)]["vi"] = vi
@@ -81,13 +59,13 @@ def main(d1, d2, output, settings):
     segments = Saga().region_growing(rlist=[data_dict["d1"]["intensity"]], output=None)
 
     # Zonal stats for rasters
-    stats1 = PyTools().zonal_stats(raster=data_dict["d1"]["intensity"], zones=segments,
-                                   output=None, count=False, mean=True, stdev=False, resize=True)
+    stats1 = PyTools().zonal_stats(raster=data_dict["d1"]["intensity"], zones=segments, resize=True)
 
-    stats2 = PyTools().zonal_stats(raster=data_dict["d2"]["intensity"], zones=segments,
-                                   output=None, count=False, mean=True, stdev=False, resize=True)
+    stats2 = PyTools().zonal_stats(raster=data_dict["d2"]["intensity"], zones=segments, resize=True)
 
-    diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b+1',
-                                            output=output)
+    # Difference
+    diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b')
+
+    # Change detection
 
     return diff

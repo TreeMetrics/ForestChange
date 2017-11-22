@@ -14,6 +14,7 @@ import os
 import numpy as np
 import logging
 from collections import namedtuple
+from miscellaneous import chunks
 
 # import gdalconst
 from gdalconst import *
@@ -116,20 +117,62 @@ def wkt2epsg(wkt):
     return epsg, proj4
 
 
-def file_import(file_path):
-    """ Load a gdal file to local database """
+def gdal_import(gdal_src, memory=True):
+    """ Load a gdal file to local python instance
+    :param gdal_src: source gdal dataset
+    :param memory: Boolean . True if wish to save the arrays in the memory.
+    """
+    logging.debug("Importing file " + str(gdal_src))
 
-    if not isvalid(file_path):
-        logging.warning("File cannot be imported. " + str(file_path))
-        return
+    # Is file
+    if os.path.isfile(str(gdal_src)):
 
-    src = gdal.Open(file_path)
-    src.SetMetadataItem('FilePath', file_path)
+        # SAGA fix
+        if os.path.splitext(gdal_src)[0] == '.sgrd':
+            gdal_src = os.path.splitext(gdal_src)[0] + '.sdat'
+
+        # Check file
+        if isvalid(gdal_src):
+            src = gdal.Open(gdal_src)
+            src.SetMetadataItem('FilePath', gdal_src)
+            return Gdal2Py(ds=src, data=memory)
+
+        else:
+            logging.error("File cannot be imported. " + str(gdal_src))
+            return
+
+    # Is datasource
+    else:
+        if isvalid(gdal_src):
+            # Is this a valid datasource
+            return Gdal2Py(ds=gdal_src, data=memory)
+
+        else:
+            logging.error("GDAL source cannot be imported. " + str(gdal_src))
+            return
 
     # driver = gdal.GetDriverByName('MEM')
     # data_source = driver.CreateCopy(file_path, src, 0)
 
-    return Gdal2Py(ds=src, data=True)
+
+def bands_to_single_ds(bands_list):
+    """ Convert several gdal single file to a single gdal datasource"""
+    src_ds = gdal.OpenShared(bands_list[0])
+    src_ds.SetMetadataItem('FilePath', bands_list[0])
+    tmp_ds = gdal.GetDriverByName('MEM').CreateCopy('', src_ds, 0)
+
+    i = 0
+    for mask_path in bands_list[1:]:
+        i = i + 1
+        mask_ds = gdal.OpenShared(mask_path)
+        mask = mask_ds.GetRasterBand(1).ReadAsArray()
+
+        tmp_ds.AddBand()
+        tmp_ds.GetRasterBand(i).WriteArray(mask)
+        del mask_ds
+        del mask
+
+    return tmp_ds
 
 
 def ds2array(ds):
@@ -139,6 +182,8 @@ def ds2array(ds):
     # dtype = [key for key, value in NP2GDAL.iteritems() if value == ds.GetRasterBand(1).DataType][0]
     # numpy_array = getattr(np, dtype)
     # arr = numpy_array(gdal_array.DatasetReadAsArray(ds))
+
+    # arr = chunks(np.float64(gdal_array.DatasetReadAsArray(ds)), size=ds.RasterXSize*ds.RasterYSize)
 
     arr = np.float64(gdal_array.DatasetReadAsArray(ds))
     nodata = ds.GetRasterBand(1).GetNoDataValue()
@@ -222,7 +267,7 @@ def py2gdal(py_raster, file_path=None):
     else:
         if os.path.splitext(file_path)[1].lower() == '.tif' or os.path.splitext(file_path)[1].lower == '.tiff':
             driver_name = 'GTiff'
-            driver = gdal.GetDriverByName(driver_name)
+            driver = gdal.GetDriverByName(str(driver_name))
             file_path = os.path.splitext(file_path)[0] + '.tif'
 
         elif os.path.splitext(file_path)[1].lower() == '.sgrd' or os.path.splitext(file_path)[1].lower == '.sdat':
@@ -273,11 +318,13 @@ def py2gdal(py_raster, file_path=None):
 def array2raster(src_array, name, mask=None, geotransform=None, projection=None, nodata=0, ds=False, file_path=None):
 
     new_raster = Gdal2Py(ds='new')
+    src_array = np.array(src_array)
 
     if file_path:
-        name = file_path
+        new_raster.filename = file_path
 
-    new_raster.filename = name
+    else:
+        new_raster.filename = name
 
     # No data
     if mask:
@@ -344,3 +391,5 @@ def array2raster(src_array, name, mask=None, geotransform=None, projection=None,
         new_raster.ds = py2gdal(py_raster=new_raster, file_path=file_path)
 
     return new_raster
+
+

@@ -12,7 +12,7 @@
 This contains different methods used in the code
 """
 
-
+import sys
 import subprocess
 
 
@@ -45,3 +45,22 @@ def dict_find(key, dictionary):
             for d in v:
                 for result in dict_find(key, d):
                     yield result
+
+
+# def chunks(l, n):
+#     n = max(1, n)
+#     return (l[i:i+n] for i in xrange(0, len(l), n))
+
+
+def chunks(l, size, maxsize=sys.maxsize):
+    """Yield successive n-sized chunks from l."""
+
+    maxsize=536870912
+
+    #if n == None:
+    #    if not size == None:
+    n = size/maxsize/2
+    n = max(1, n)
+
+    for i in xrange(0, len(l), n):
+        yield l[i:i + n]
