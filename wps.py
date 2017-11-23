@@ -29,7 +29,7 @@ class ForestChange(EO4AProcess):
                 'newer dataset',
                 data_type='string',
                 abstract="""
-                Full path to newer dataset file.
+                Full path to newer RGBNIR file in .tif format.
                 """,
                 min_occurs=1,
                 max_occurs=1,
@@ -39,7 +39,7 @@ class ForestChange(EO4AProcess):
                 'older dataset',
                 data_type='string',
                 abstract="""
-                Full path to older dataset file.
+                Full path to older RGBNIR file in .tif format.
                 """,
                 min_occurs=1,
                 max_occurs=1,
