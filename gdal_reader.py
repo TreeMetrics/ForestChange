@@ -196,6 +196,25 @@ def ds2array(ds):
         return arr
 
 
+# def sen_isvalid(source):
+#     if not source:
+#         logging.error("Sentinel source not defined.")
+#         return False
+#
+#     print source
+#     # Check if file
+#     try:
+#         gdal.UseExceptions()
+#         gdal.Open(source, GA_ReadOnly)
+#         # gdal.DontUseExceptions()
+#
+#     except:
+#         logging.error("Sentinel source cannot be read.")
+#         return
+#
+#     return True
+
+
 def isvalid(source):
     """ Check if the file is a valid gdal _raster"""
 

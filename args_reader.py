@@ -18,6 +18,7 @@ import logging
 from version import __version__, __date__, __copyright__
 from bunch import Config
 
+TEMPDIR = None
 
 class FileCheck(argparse.Action):
     def __call__(self, parser_i, namespace, values, option_string=None):
@@ -49,8 +50,15 @@ class FileListCheck(argparse.Action):
 
 
 class S2ProductCheck(argparse.Action):
+
     def __call__(self, parser_i, namespace, values, option_string=None):
         prospective_dir = values
+
+        global TEMPDIR
+        tempdir = TEMPDIR
+
+        if not tempdir:
+            tempdir = os.path.dirname(prospective_dir)
 
         if not prospective_dir:
             parser_i.print_help()
@@ -60,10 +68,10 @@ class S2ProductCheck(argparse.Action):
 
             # Extract file
             zip_ref = zipfile.ZipFile(prospective_dir, 'r')
-            zip_ref.extractall(os.path.splitext(prospective_dir)[0])
+            zip_ref.extractall(os.path.join(tempdir, os.path.splitext(os.path.basename(prospective_dir))[0]))
             zip_ref.close()
 
-            prospective_dir = os.path.splitext(prospective_dir)[0]
+            prospective_dir = os.path.join(tempdir, os.path.splitext(os.path.basename(prospective_dir))[0])
 
             if not os.path.isdir(prospective_dir):
                 parser_i.print_help()
@@ -148,13 +156,19 @@ def main():
     # if args.s2_product_dir is None:
 
 
+    parser.add_argument("--tempdir", required=False, help="Temporal directory")
+    args, leftovers = parser.parse_known_args()
+    global TEMPDIR
+    TEMPDIR = args.tempdir
+
+
     d1 = parser.add_argument_group('Newer dataset')
     group1 = d1.add_mutually_exclusive_group(required=True)
     group1.add_argument("-b1", "--new_rgbnir_bands", action=FileListCheck,
                     help="List of newer single band files separated by colon: 'red_band;green_band;blue_band;nir_band' ")
     group1.add_argument("-d1", "--new_rgbnir_file", action=FileCheck, required=False,
                    help="Full path of newer multiband dataset (rgbnir TIF format).")
-    group1.add_argument("-s1", "--s2_product_dir_newer", action=S2ProductCheck, required=False,
+    group1.add_argument("-s2n", "--s2_product_dir_newer", action=S2ProductCheck, required=False,
                         help="Sentinel 2 output directory")
 
     # Add  old dataset
@@ -164,7 +178,7 @@ def main():
                     help="List of older single band files separated by colon: 'red_band;green_band;blue_band;nir_band' ")
     group1.add_argument("-d2", "--old_rgbnir_file", action=FileCheck, required=False,
                     help="Full path of older multiband dataset (rgbnir TIF format).")
-    group1.add_argument("-s2", "--s2_product_dir_older", action=S2ProductCheck, required=False,
+    group1.add_argument("-s2o", "--s2_product_dir_older", action=S2ProductCheck, required=False,
                         help="Sentinel 2 output directory")
 
     parser.add_argument("-b", "--bounds", action=FileCheck, required=False,
@@ -172,9 +186,6 @@ def main():
 
     parser.add_argument("-o", "--output", required=True,
                         help="Output file path (TIF format)")
-
-    parser.add_argument("--tempdir", required=False,
-                        help="Temporal directory")
 
     # Read settings
     if 'settings_file' in Config():

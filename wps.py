@@ -25,7 +25,7 @@ class ForestChange(EO4AProcess):
     def __init__(self):
         inputs = [
             LiteralInput(
-                's1',
+                's2_product_dir_newer',
                 's2_product_dir_newer',
                 data_type='string',
                 abstract="Full path to Sentinel-2 product directory",
@@ -33,7 +33,7 @@ class ForestChange(EO4AProcess):
                 max_occurs=1,
             ),
             LiteralInput(
-                's2',
+                's2_product_dir_older',
                 's2_product_dir_older',
                 data_type='string',
                 abstract="Full path to Sentinel-2 product directory",
@@ -77,15 +77,15 @@ class ForestChange(EO4AProcess):
         
         Returns
         -------
-        string
+        string with the path of a TIF file containing the vegetation detection
             The service command to be executed.
         """
         self.temp_path = tempfile.mkdtemp(dir=self.output_dir)
         logger.info('Tempdir: %s', self.temp_path)
         logger.info('Request inputs: %s', request.inputs)
 
-        # Capture gdalinfo output in a temp file
-        return 'python  %s/forest_change --s2_product_dir_newer %s --s2_product_dir_older %s --tempdir %s -o %s' % (
+        # Capture Forest Change output in a temp file
+        return 'python  %s/forest_change.py --s2_product_dir_newer %s --s2_product_dir_older %s --tempdir %s -o %s' % (
             self._package_path,
             self._get_input(request, 's2_product_dir_newer'),
             self._get_input(request, 's2_product_dir_older'),

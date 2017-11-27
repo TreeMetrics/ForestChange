@@ -72,6 +72,8 @@ elif 'new_rgbnir_bands' in args and args.new_rgbnir_bands:
 
 elif 's2_product_dir_newer' in args and args.s2_product_dir_newer:
 
+    raise Exception('here')
+
     for file_path in args.s2_product_dir_newer:
         file_name = str(os.path.splitext(os.path.basename(file_path))[0]).lower()
 
