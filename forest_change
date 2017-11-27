@@ -39,6 +39,9 @@ elif 'new_rgbnir_file' in args and args.new_rgbnir_file:
 elif 'new_rgbnir_bands' in args and args.new_rgbnir_bands:
     tempdir = os.path.join(os.path.dirname(args.new_rgbnir_bands[0]), 'temp')
 
+elif 's2_product_dir_newer' in args and args.s2_product_dir_newer:
+    tempdir = os.path.join(os.path.dirname(args.s2_product_dir_newer[0]), 'temp')
+
 else:
     raise Exception("Temporary directory cannot not been defined. Aborting ..")
 
@@ -66,6 +69,19 @@ elif 'new_rgbnir_bands' in args and args.new_rgbnir_bands:
     dataset1 = gdalr.gdal_import(gdalr.bands_to_single_ds(args.new_rgbnir_bands))
     dataset2 = gdalr.gdal_import(gdalr.bands_to_single_ds(args.old_rgbnir_bands))
 
+
+elif 's2_product_dir_newer' in args and args.s2_product_dir_newer:
+
+    for file_path in args.s2_product_dir_newer:
+        file_name = str(os.path.splitext(os.path.basename(file_path))[0]).lower()
+
+        start = file_name.find('_b')
+        band_number = file_name[start+2:start+4]
+
+
+
+    exit()
+
 else:
 
     raise Exception("Error getting inputs Aborting ..")
@@ -85,7 +101,7 @@ if not Config()['debug']:
 
 # Check output
 if not os.path.exists(change_raster_file):
-    raise Exception('Error creating chang detection output')
+    raise Exception('Error creating change detection output')
 
 logging.info('Change detection successfully completed.')
 logging.debug(str(change_raster_file))
