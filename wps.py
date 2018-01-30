@@ -51,7 +51,7 @@ class ForestChange(EO4AProcess):
                 'tile_size',
                 'Tile size for improve performance of analysis',
                 data_type='string',
-                abstract="Tile size for improve performance of analysis (optional)",
+                abstract="Tile size for improve performance of analysis.",
                 min_occurs=0,
                 max_occurs=1,
             ),

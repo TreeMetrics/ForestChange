@@ -217,11 +217,11 @@ def main():
     else:
         default_bounds = None
 
-    parser.add_argument("-th", "--threshold", type=int, required=False, default=20,
-                        help="Change threshold 0-100. Default is 20")
+    parser.add_argument("-th", "--threshold", type=int, required=False, default=0,
+                        help="Change threshold 0-100. Default is 30")
 
-    parser.add_argument("--tile_size", "--tile_size", type=int, required=False, default=500,
-                        help="Tile size for improve performance of analysis. Default is 500")
+    parser.add_argument("--tile_size", "--tile_size", type=int, required=False, default=1000,
+                        help="Tile size for improve performance of analysis. Default is 1000")
 
     parser.add_argument("-b", "--bounds", action=FileCheck, required=False, default=default_bounds,
                         help="Forest boundaries. (Optional)")
@@ -253,7 +253,7 @@ def main():
                         help="Profiles including the parameters for analysis. "
                              "Check 'settings.json' file to add/change an analysis profile")
 
-    # Check and get arguments
+    # Check and get arments
     args = parser.parse_args()
     parameters = read_json_file(settings_json_path)['profiles'][args.parameters]
     parameters = DumpIntoNamespace(parameters)
