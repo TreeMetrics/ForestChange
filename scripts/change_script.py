@@ -14,8 +14,9 @@ from toolbox.image_tools import RasterTools as PyTools
 
 def main(d1, d2, settings):
 
-    # equalization = settings.equalization
-    # normalisation = settings.normalisation
+    # settings:
+    equalization = None
+    normalisation = True
 
     # Pre-processing for both datasets
     data_dict = {}
@@ -70,13 +71,17 @@ def main(d1, d2, settings):
     # Difference
     #diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b')
 
+    diff = PyTools().single_band_calculator(rlist=[data_dict["d1"]["normalised"], data_dict["d2"]["normalised"]], expression='a-b')
+
+    return diff
+
     # Histogram matching
-    matched_intensity = PyTools().histogram_matching(input_raster=data_dict["d1"]["normalised"],
-                                                     reference=data_dict["d2"]["normalised"], output='hist_matching_dataset1')
+    # matched_intensity = PyTools().histogram_matching(input_raster=data_dict["d1"]["normalised"],
+    #                                                 reference=data_dict["d2"]["normalised"], output='hist_matching_dataset1')
 
 
     # Change detection
 
-    diff = PyTools().single_band_calculator(rlist=[matched_intensity, data_dict["d2"]["normalised"]], expression='a-b')
+    # diff = PyTools().single_band_calculator(rlist=[matched_intensity, data_dict["d2"]["normalised"]], expression='a-b')
 
-    return diff
+
