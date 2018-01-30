@@ -17,9 +17,8 @@ logger = logging.getLogger('PYWPS')
 
 class ForestChange(EO4AProcess):
     """
-    forest change detection service
-    
-    Returns something (or not)
+    Forest change detection service
+    Returns a .tif file with the forest areas where changes occurred.
     """
 
     def __init__(self):
@@ -44,7 +43,7 @@ class ForestChange(EO4AProcess):
                 'change_threshold',
                 'Change threshold 0-100',
                 data_type='integer',
-                abstract="Change threshold 0-100. Default is 30",
+                abstract="Change threshold 0-100. Default is 20",
                 min_occurs=1,
                 max_occurs=1,
             ),
@@ -93,8 +92,14 @@ class ForestChange(EO4AProcess):
         
         Returns
         -------
-        string with the path of a TIF file containing the vegetation detection
+        string with the path of a TIF file containing the forest change detection
             The service command to be executed.
+                    
+            s2_product_dir_newer: Full path to Sentinel-2 product directory, data type=string
+            s2_product_dir_older: Full path to Sentinel-2 product directory, data type=string
+            change_threshold: Change threshold 0-100. Default is 30, data type=integer
+            destfile: Full path to destination file name., data type=string
+            output: ForestChange output
         """
         self.temp_path = tempfile.mkdtemp(dir=self.output_dir)
         logger.info('Tempdir: %s', self.temp_path)

@@ -41,12 +41,10 @@ def reclassify(input_raster, new_value, old_value_min=None, old_value_max=None, 
     raster_array = gdal_reader.GdalReader().ds2array(src_ds)
     nodata = src_ds.GetRasterBand(1).GetNoDataValue()
 
-    reclassify = numpy_tools.reclassify(raster_array, new_value, old_value_min, old_value_max, nodata=nodata)
-
-    print reclassify
+    reclass = numpy_tools.reclassify(raster_array, new_value, old_value_min, old_value_max, nodata=nodata)
 
     if not output:
         output = 'reclassified'
 
-    return gdal_import.gdal_import(gdal_reader.GdalReader().array2ds(reclassify, output, mask_ds=input_raster))
+    return gdal_import.gdal_import(gdal_reader.GdalReader().array2ds(reclass, output, mask_ds=input_raster))
 

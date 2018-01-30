@@ -17,6 +17,8 @@ def main(d1, d2, settings):
     # settings:
     equalization = None
     normalisation = True
+    histogram_matching = None
+    method = 'nir'       # Intensity, nir or ndvi
 
     # Pre-processing for both datasets
     data_dict = {}
@@ -28,37 +30,48 @@ def main(d1, d2, settings):
         data_dict["d" + str(j)] = {}
         data_dict["d" + str(j)]["dataset"] = dataset
 
-        # Option 1: Working with NIR
-        dataset = PyTools().nir(dataset)
-        data_dict["d" + str(j)]["nir"] = dataset
+        if method.lower() == 'nir':
+            dataset = PyTools().nir(dataset)
+            data_dict["d" + str(j)]["nir"] = dataset
+
+        # Equalization
+        if equalization:
+             dataset = PyTools().equalization(dataset)
 
         # Normalise
-        # if equalization:
-        #     dataset = PyTools().equalization(dataset)
+        if normalisation:
+            dataset = PyTools().normalisation(dataset)
+            data_dict["d" + str(j)]["normalised"] = dataset
 
+        # Get Method
+        if method.lower() == 'intensity':
+            base_layer = PyTools().rgb_intensity(dataset)
+            data_dict["d" + str(j)]["base_layer"] = base_layer
 
-        dataset = PyTools().normalisation(dataset)
-        data_dict["d" + str(j)]["normalised"] = dataset
+        elif method.lower() == 'ndvi':
+            base_layer = PyTools().vegetation_index(dataset)
+            data_dict["d" + str(j)]["base_layer"] = base_layer
+
+        elif method.lower() == 'nir':
+            data_dict["d" + str(j)]["base_layer"] = dataset
+
+        else:
+            raise Exception("Change detection method not defined")
 
         del dataset
 
-        # Get Intensity
-        # intensity = PyTools().rgb_intensity(dataset)
+        # Histogram matching
+        if histogram_matching:
+            data_dict["d1"]["base_layer"] = PyTools().histogram_matching(input_raster=data_dict["d1"]["base_layer"],
+                                                                         reference=data_dict["d2"]["base_layer"],
+                                                                         output='hist_matching_dataset1')
 
-        # if intensity:
-        #    data_dict["d" + str(j)]["intensity"] = intensity
+    diff = PyTools().single_band_calculator(rlist=[data_dict["d1"]["base_layer"], data_dict["d2"]["base_layer"]],
+                                            expression='a-b')
 
-        # else:
-        #     raise Exception("Error calculation intensity for file: " + str(dataset))
+    return diff
 
-        # Get Vegetation Index
-        # vi = PyTools().vegetation_index(dataset)
-
-        # if vi:
-        #   data_dict["d" + str(j)]["vi"] = vi
-
-        # else:
-        #    raise Exception("Error calculation vegetation index for file: " + str(dataset))
+    # Object base apporach
 
     # Segmentation of the dataset
     #segments = Saga().region_growing(rlist=[data_dict["d1"]["intensity"]], output=None)
@@ -70,18 +83,3 @@ def main(d1, d2, settings):
 
     # Difference
     #diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b')
-
-    diff = PyTools().single_band_calculator(rlist=[data_dict["d1"]["normalised"], data_dict["d2"]["normalised"]], expression='a-b')
-
-    return diff
-
-    # Histogram matching
-    # matched_intensity = PyTools().histogram_matching(input_raster=data_dict["d1"]["normalised"],
-    #                                                 reference=data_dict["d2"]["normalised"], output='hist_matching_dataset1')
-
-
-    # Change detection
-
-    # diff = PyTools().single_band_calculator(rlist=[matched_intensity, data_dict["d2"]["normalised"]], expression='a-b')
-
-

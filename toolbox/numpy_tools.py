@@ -18,9 +18,6 @@ from core import miscellaneous
 
 def reclassify(array, new_value, old_value_min=None, old_value_max=None, nodata=0):
 
-    print old_value_max
-    print old_value_min
-
     if new_value == 'nan':
         new_value = np.nan
 
