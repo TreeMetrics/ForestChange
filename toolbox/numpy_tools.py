@@ -9,22 +9,21 @@
 # ==========================================================================================
 """ This module is a test"""
 
-from collections import defaultdict
+import collections
+import copy
 import numpy as np
 import logging
 
 
-def equalization(bands_list, nan=0):
+def equalization(bands_list):
     """Equalization of a 2D array with finite values
-    :param bands_list List of 2D array
-    :param nan no data value (finite value)"""
+    :param bands_list List of 2D array"""
 
     d_bands = []
     for i in xrange(len(bands_list)):
 
         # Replace nan values
         raster_array = bands_list[i]
-        raster_array[np.isnan(raster_array)] = nan
 
         # Equalize histogram
         image_histogram, bins = np.histogram(raster_array.flatten(), 256, normed=True)
@@ -36,18 +35,16 @@ def equalization(bands_list, nan=0):
         array_equalized = image_equalized.reshape(raster_array.shape)
 
         # Replace nan values
-        array_equalized[array_equalized == nan] = np.nan
-
         if not isinstance(array_equalized, (np.ndarray, np.generic)):
             logging.warning('Failed creating equalization')
             return
 
         d_bands.append(array_equalized)
 
-    return d_bands
+    return np.array(d_bands)
 
 
-def normalisation(bands_list):
+def normalisation(bands_list, nodata=None):
     """Normalisation of a 2D array to 0-255 
     :param bands_list List of 2D array"""
 
@@ -55,7 +52,19 @@ def normalisation(bands_list):
     for i in xrange(len(bands_list)):
 
         raster_array = bands_list[i]
+        # raster_array[raster_array == nodata] = np.nan
+
+        np.seterr(divide='ignore', invalid='ignore')
         raster_array *= 255.0 / raster_array.max()
+        # raster_array = np.divide(raster_array, (raster_array.max()/255))
+
+        # mask = np.ma.masked_invalid(raster_array)
+
+        raster_array = raster_array.astype(np.uint8)
+        # raster_array[raster_array == np.nan] = nodata
+        # raster_array[np.isneginf(raster_array)] = 0
+        # raster_array[raster_array < 0] = nodata
+        # raster_array[raster_array > 255] = nodata
 
         if not isinstance(raster_array, (np.ndarray, np.generic)):
             logging.warning('Failed creating equalization')
@@ -63,7 +72,56 @@ def normalisation(bands_list):
 
         d_bands.append(raster_array)
 
-    return d_bands
+    return np.array(d_bands)
+
+
+def histogram_matching(array1, array2, nodata=0):
+
+    #mask = copy.deepcopy(array2)
+    #mask[mask != nodata] = 1
+    #mask[mask == nodata] = 0
+
+    # Histogram matching
+    oldshape = array2.shape
+    source = array2.ravel()
+    template = array1.ravel()
+
+    # get the set of unique pixel values and their corresponding indices and counts
+
+    # isuse with numpy version
+    # s_values, bin_idx, s_counts = np.unique(source, return_inverse=True, return_counts=True)
+
+    s_values, bin_idx = np.unique(source, return_inverse=True)
+    s_counts = collections.Counter(source).values()
+
+    # slower option
+    # s_values =  sorted(set(source))
+    # s_counts = [list(source.flatten()).count(v) for v in s_values]
+
+    # isuse with numpy version
+    # t_values, t_counts = np.unique(template, return_counts=True)
+
+    t_values = np.unique(template)
+    t_counts = collections.Counter(template).values()
+
+    # slower option
+    # t_values =  sorted(set(template))
+    # t_counts = [list(template.flatten()).count(v) for v in t_values]
+
+    # take the cumsum of the counts and normalize by the number of pixels to
+    # get the empirical cumulative distribution functions for the source and
+    # template images (maps pixel value --> quantile)
+    s_quantiles = np.cumsum(s_counts).astype(np.float64)
+    s_quantiles /= s_quantiles[-1]
+    t_quantiles = np.cumsum(t_counts).astype(np.float64)
+    t_quantiles /= t_quantiles[-1]
+
+    # interpolate linearly to find the pixel values in the template image
+    # that correspond most closely to the quantiles in the source image
+    interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
+
+    # output = np.ma.array(interp_t_values[bin_idx].reshape(oldshape), mask=mask).filled(nodata)
+    return interp_t_values[bin_idx].reshape(oldshape)
 
 
 def rgb_intensity(bands_list):
@@ -119,13 +177,12 @@ def zonal_stats(valuesarr, zonesarr, count=True, mean=True, stdev=True, resize=T
     # Data format
     valuesarr = valuesarr[:rows, :cols]
     zonesarr = zonesarr[:rows, :cols]
-    zonesarr[np.isnan(zonesarr)] = nodata  # Doesn't work with nan values
     zoneslist = zonesarr.ravel()
 
     # stats
     # Create a dictionary with the object ID as key, and the
     # locations of each pixel in zonal raster that has the same ID (1D array)
-    objects = defaultdict(list)
+    objects = collections.defaultdict(list)
     [objects[zonesarr[i, j]].append([i, j]) for i, j in np.ndindex(zonesarr.shape)]
 
     outputs = {}
@@ -138,7 +195,6 @@ def zonal_stats(valuesarr, zonesarr, count=True, mean=True, stdev=True, resize=T
         # Assign the values for each objects
         countarr = map(countdict.get, zoneslist)
         countarr = np.array(np.reshape(countarr, (rows, cols)), dtype="float32")
-        countarr[np.isnan(countarr)] = nodata
 
         # Create raster
         outputs['count'] = countarr
@@ -151,7 +207,6 @@ def zonal_stats(valuesarr, zonesarr, count=True, mean=True, stdev=True, resize=T
         # Assign the values for each objects
         meanarr = map(meandic.get, zoneslist)
         meanarr = np.array(np.reshape(meanarr, (rows, cols)), dtype="float32")
-        meanarr[np.isnan(meanarr)] = nodata
 
         # Create raster
         outputs['mean'] = meanarr
@@ -164,7 +219,6 @@ def zonal_stats(valuesarr, zonesarr, count=True, mean=True, stdev=True, resize=T
         # Assign the values for each objects
         stdarr = map(stdndic.get, zoneslist)
         stdarr = np.array(np.reshape(stdarr, (rows, cols)), dtype="float32")
-        stdarr[np.isnan(stdarr)] = nodata
 
         # Create raster
         outputs['stdev'] = stdarr
@@ -186,10 +240,10 @@ def array_calculator(array_list, expression):
     alphabet = tuple('abcdefghijklmnopqrstuvwxyz')
     # rasterdic = defaultdict(list)
 
-    i = -1
+    i = 0
     for array in array_list:
-        i += 1
         globals()[alphabet[i]] = array
+        i += 1
     # setattr(self, str(alphabet[i]),np.array(gdalr.raster2array(_raster, band=1),dtype='float'))
     # expression = expression.replace(alphabet[i],'self.' + alphabet[i])
 
@@ -200,6 +254,7 @@ def array_calculator(array_list, expression):
     gexpression = expression
 
     outarr = eval(gexpression)
-    outarr[np.isnan(outarr)] = np.nan
 
     return outarr
+
+

@@ -1,11 +1,10 @@
 # ! /usr/bin/env python
 
-import os
 import logging
-
+import os
 import saga_api
 
-import gdal_reader
+from spatial import gdal_reader
 
 # sys.path.append('/home/puter/forestspatial/trash/dependencies_old/saga-2.1.0/src/saga_core/saga_api')
 # saga_lib_path = '/usr/lib/x86_64-linux-gnu/saga'
@@ -39,7 +38,7 @@ def is_grid(input_grid):
     """
 
     # Check gdal
-    if gdal_reader.isvalid(input_grid):
+    if gdal_reader.gdal2ds(input_grid):
         return False
 
     # Check SAGA

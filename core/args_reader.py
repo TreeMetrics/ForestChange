@@ -9,24 +9,27 @@
 # ==========================================================================================
 
 
-import os
 import argparse
 import json
-import zipfile
 import logging
+import os
+import zipfile
 
-from version import __version__, __date__, __copyright__
 from bunch import Config
+from core import config
+from version import __version__, __date__, __copyright__
 
 TEMPDIR = None
+
 
 class FileCheck(argparse.Action):
     def __call__(self, parser_i, namespace, values, option_string=None):
         prospective_file = values
 
         if not prospective_file or not os.path.isfile(prospective_file):
+            logging.critical('File does not exists. ' + str(prospective_file))
             parser_i.print_help()
-            raise Exception('File does not exists. ' + str(prospective_file))
+            exit(1)
 
         else:
             setattr(namespace, self.dest, prospective_file)
@@ -36,12 +39,13 @@ class FileListCheck(argparse.Action):
     def __call__(self, parser_i, namespace, values, option_string=None):
         prospective_list = values
 
-        field_paths=[]
+        field_paths = []
         for file_path in prospective_list.strip().split(";"):
 
             if not file_path or not os.path.isfile(file_path):
+                logging.critical('File does not exists. ' + str(prospective_list))
                 parser_i.print_help()
-                raise Exception('File does not exists. ' + str(file_path))
+                exit(1)
 
             else:
                 field_paths.append(file_path)
@@ -50,7 +54,6 @@ class FileListCheck(argparse.Action):
 
 
 class S2ProductCheck(argparse.Action):
-
     def __call__(self, parser_i, namespace, values, option_string=None):
         prospective_dir = values
 
@@ -61,8 +64,9 @@ class S2ProductCheck(argparse.Action):
             tempdir = os.path.dirname(prospective_dir)
 
         if not prospective_dir:
+            logging.critical('File does not exists. ' + str(prospective_dir))
             parser_i.print_help()
-            raise Exception('Sentinel Product directrory does not exists. ' + str(prospective_dir))
+            exit(1)
 
         elif os.path.isfile(prospective_dir) and os.path.splitext(prospective_dir)[1].lower() == '.zip':
 
@@ -74,47 +78,68 @@ class S2ProductCheck(argparse.Action):
             prospective_dir = os.path.join(tempdir, os.path.splitext(os.path.basename(prospective_dir))[0])
 
             if not os.path.isdir(prospective_dir):
+                logging.critical('Error extracting sentinel product directory zip file. ' + str(prospective_dir))
                 parser_i.print_help()
-                raise Exception('Error extracting sentinel product directrory zip file. ' + str(prospective_dir))
+                exit(1)
 
         elif not os.path.isdir(prospective_dir):
+            logging.critical('Sentinel Product directory does not exists. ' + str(prospective_dir))
             parser_i.print_help()
-            raise Exception('Sentinel Product directory does not exists. ' + str(prospective_dir))
+            exit(1)
 
         data = {}
-        for dirpath, subdirs, files in os.walk(prospective_dir):
+        for dir_path, subdirs, files in os.walk(prospective_dir):
 
             # Find Granule dirs
             for name_dir in subdirs:
                 if name_dir.lower() == 'granule':
-                    granule_dir = os.path.join(dirpath, name_dir)
+                    granule_dir = os.path.join(dir_path, name_dir)
 
                     # Get product name and find img_data dirs
                     for product_dir in os.listdir(granule_dir):
-                        for dirpath, subdirs, files in os.walk(granule_dir):
-                            for name_dir in subdirs:
-                                if name_dir.lower() == 'img_data':
-                                    img_data_dir = os.path.join(dirpath, name_dir)
+                        for dir1_path, subdirs1, files1 in os.walk(granule_dir):
+                            for name_dir1 in subdirs1:
+                                if name_dir1.lower() == 'img_data':
+                                    img_data_dir = os.path.join(dir1_path, name_dir1)
 
-                                    # Look for images
+                                    # Look for resolution folders (e.g. "R20m")
+                                    resolution_list = []
+                                    for res_dir in os.listdir(img_data_dir):
+                                        res_dir_str = str(res_dir)
+                                        start = res_dir_str.index('R') + 1
+                                        end = res_dir_str.index('m', start)
+
+                                        resolution_list.append(res_dir_str[start:end])
+
+                                    if len(resolution_list) >= 1:
+                                        resolution_dir = os.path.join(img_data_dir,
+                                                                      'R' + str(max(resolution_list)) + 'm')
+
+                                    else:
+                                        resolution_dir = img_data_dir
+
+                                    # Check for JP2 files
                                     dataset_list = []
-                                    for dir_im, subdirs_im, files_im in os.walk(img_data_dir):
-                                        for file_name in files_im:
-                                            if file_name.endswith(".jp2"):
-                                                dataset_list.append(os.path.join(dir_im, file_name))
+                                    for file_name in os.listdir(resolution_dir):
+                                        if file_name.endswith(".jp2"):
+                                            dataset_list.append(os.path.join(resolution_dir, file_name))
 
                                     data[product_dir] = dataset_list
 
         if len(data.keys()[0]) == 0:
-            raise Exception('No Sentinel .jp2 images found ' + str(data.keys()))
+            logging.critical('No Sentinel .jp2 images found ' + str(data.keys()))
+            parser_i.print_help()
+            exit(1)
 
         elif len(data.keys()) > 1:
             logging.warning('Too many Sentinel datasets, only the first one will be processed' + str(data.keys()[0]))
-        #    raise Exception('Too many Sentinel dataset ' + str(data.keys()[0]))
+        # raise Exception('Too many Sentinel dataset ' + str(data.keys()[0]))
 
         if len(str(data[data.keys()[0]])) < 3:
-            raise Exception('No enough Sentinel .jp2 files found. At least 3 bands are required. Bands dataset1: '
+            logging.critical('No enough Sentinel .jp2 files found. At least 3 bands are required. Bands dataset1: '
                             + str(data[data.keys()[0]]) + ' Bands dataset2: ' + str(data[data.keys()[1]]))
+            parser_i.print_help()
+            exit(1)
 
         else:
             setattr(namespace, self.dest, data[data.keys()[0]])
@@ -131,13 +156,15 @@ def read_json_file(filepath):
 
 
 def get_settings_profiles(json_file):
-
     profiles = read_json_file(json_file)['profiles'].keys()
 
     return profiles
 
 
 def main():
+    # Check configuration
+    config.check_config()
+
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Tools for Forest Change Detection',
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -145,47 +172,80 @@ def main():
     parser.add_argument('-v', '--version', action='version', version="Forest Spatial" + '\n' +
                                                                      "Version: " + str(__version__) + '\n' +
                                                                      "Last updated " + str(__date__) + '\n' +
-                                                                        __copyright__ + '\n')
+                                                                     __copyright__ + '\n')
 
-    parser.add_argument("--DEBUG", action='store_true', help="Create debug files")
+    group0 = parser.add_mutually_exclusive_group(required=False)
+    group0.add_argument("--debug", action="store_true", required=False, help="Create debug files")
+    group0.add_argument("--silent", action="store_true", required=False, help="Create debug files")
 
-    #parser.add_usage_group()
+    # Set verbose level
+    args, leftovers = parser.parse_known_args()
+    if 'debug' in args:
+        config.logging_config(level='debugging')
+
+    elif 'silent' in args:
+        config.logging_config(level='silent')
+
+    else:
+        config.logging_config(level='default')
+
+    # parser.add_usage_group()
     # parser.add_argument("-s", "--s2_product_dir", action=S2ProductCheck, required=False,
     #                    help="Sentinel 2 output directory")
     # args, leftovers = parser.parse_known_args()
     # if args.s2_product_dir is None:
 
-
+    # Get tempdir
     parser.add_argument("--tempdir", required=False, help="Temporal directory")
     args, leftovers = parser.parse_known_args()
     global TEMPDIR
     TEMPDIR = args.tempdir
 
-
+    # Get rest of input data
     d1 = parser.add_argument_group('Newer dataset')
     group1 = d1.add_mutually_exclusive_group(required=True)
     group1.add_argument("-b1", "--new_rgbnir_bands", action=FileListCheck,
-                    help="List of newer single band files separated by colon: 'red_band;green_band;blue_band;nir_band' ")
+                        help="List of newer single band files separated by colon: "
+                             "'red_band;green_band;blue_band;nir_band'")
     group1.add_argument("-d1", "--new_rgbnir_file", action=FileCheck, required=False,
-                   help="Full path of newer multiband dataset (rgbnir TIF format).")
+                        help="Full path of newer multiband dataset (rgbnir TIF format).")
     group1.add_argument("-s2n", "--s2_product_dir_newer", action=S2ProductCheck, required=False,
                         help="Sentinel 2 output directory")
 
     # Add  old dataset
     d2 = parser.add_argument_group('Older dataset')
-    group1 = d2.add_mutually_exclusive_group(required=True)
-    group1.add_argument("-b2", "--old_rgbnir_bands", action=FileListCheck,
-                    help="List of older single band files separated by colon: 'red_band;green_band;blue_band;nir_band' ")
-    group1.add_argument("-d2", "--old_rgbnir_file", action=FileCheck, required=False,
-                    help="Full path of older multiband dataset (rgbnir TIF format).")
-    group1.add_argument("-s2o", "--s2_product_dir_older", action=S2ProductCheck, required=False,
+    group2 = d2.add_mutually_exclusive_group(required=True)
+    group2.add_argument("-b2", "--old_rgbnir_bands", action=FileListCheck,
+                        help="List of older single band files separated by colon: "
+                             "'red_band;green_band;blue_band;nir_band'")
+    group2.add_argument("-d2", "--old_rgbnir_file", action=FileCheck, required=False,
+                        help="Full path of older multiband dataset (rgbnir TIF format).")
+    group2.add_argument("-s2o", "--s2_product_dir_older", action=S2ProductCheck, required=False,
                         help="Sentinel 2 output directory")
 
-    parser.add_argument("-b", "--bounds", action=FileCheck, required=False,
+    if os.path.exists(Config()['settings_file']):
+        default_bounds = Config()['forest_area_path']
+
+    else:
+        default_bounds = None
+
+    parser.add_argument("-b", "--bounds", action=FileCheck, required=False, default=default_bounds,
                         help="Forest boundaries. (Optional)")
 
     parser.add_argument("-o", "--output", required=True,
                         help="Output file path (TIF format)")
+
+    args, leftovers = parser.parse_known_args()
+    if args.s2_product_dir_newer is not None:
+        group3 = parser.add_argument_group('Bands numbering')
+
+        group3.add_argument("-rb", "--red_band", type=int, default=4, help="Red band position")
+
+        group3.add_argument("-gb", "--green_band", type=int, default=3, help="Green band position")
+
+        group3.add_argument("-bb", "--blue_band", type=int, default=2, help="Red band position")
+
+        group3.add_argument("-ib", "--nir_band", type=int, default=8, help="Near-infrared band position")
 
     # Read settings
     if 'settings_file' in Config():

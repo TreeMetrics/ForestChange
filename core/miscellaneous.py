@@ -12,8 +12,10 @@
 This contains different methods used in the code
 """
 
+import os
 import sys
 import subprocess
+import logging
 
 
 def cmd(*args):
@@ -26,10 +28,37 @@ def cmd(*args):
         args = list(args)
 
     cmdstr = ' '.join(args)
+    logging.debug(cmdstr)
 
     proc = subprocess.Popen([cmdstr], shell=True, stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
+
+    if out:
+        logging.debug(out)
+
+    if err:
+        logging.error(err)
+
     return out
+
+
+def new_unique_file(file_path, overwrite=False):
+    """Force to create a folder or file with unique name."""
+
+    if os.path.exists(file_path):
+        if overwrite:
+            os.remove(file_path)
+
+        else:
+            n = 0
+            while os.path.exists(file_path):
+                n += 1
+                # file_path = os.path.splitext(file_path)[0] + '_' + str(n) + os.path.splitext(file_path)[1]
+
+                file_path = str(os.path.splitext(file_path)[0]).split("__")[0] + '__' + str(n) + \
+                            os.path.splitext(file_path)[1]
+
+    return file_path
 
 
 def dict_find(key, dictionary):
@@ -64,3 +93,15 @@ def chunks(l, size, maxsize=sys.maxsize):
 
     for i in xrange(0, len(l), n):
         yield l[i:i + n]
+
+
+def is_number(s):
+
+    if s:
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+    else:
+        return False

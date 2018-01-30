@@ -19,8 +19,9 @@ import ConfigParser
 
 from bunch import Config
 from miscellaneous import cmd, dict_find
+from spatial import gdal_error_handler
 
-config_file = os.path.join(os.path.dirname(__file__), "config.cfg")
+config_file = os.path.join(os.path.dirname(__file__), '..', 'config', "config.cfg")
 
 
 def find_bins(package_name):
@@ -93,3 +94,51 @@ def check_config():
                       str(Config()["settings_file"]))
 
         raise Exception('Settings file "settings.json" cannot be found. Aborting...')
+
+    forest_area_path = list(dict_find('forest_area_path', config_dict))[0]
+    if os.path.exists(os.path.join(os.path.dirname(__file__), forest_area_path)):
+        envidic['forest_area_path'] = os.path.join(os.path.dirname(__file__), forest_area_path)
+
+    elif os.path.exists(forest_area_path):
+        envidic['forest_area_path'] = forest_area_path
+
+    else:
+        envidic['forest_area_path'] = None
+        logging.warning("forest_area_path not defined")
+
+
+def logging_config(level='default'):
+    """Verbosity levels:
+    Level 3: Debugging - Prints detailed debugging info
+    Level 2: Default -   Prints info, warnings and errors
+    Level 1: Quiet -     Prints only warnings and errors
+    Level 0: Silent -    Does not print anything in terminal."""
+
+    rootLogger = logging.getLogger('')
+    if level == 3 or level.lower() == 'debugging':
+        fmt = "%(levelname)-8.8s %(module)s.py:%(lineno)4s %(message)s [%(asctime)s]"
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(fmt))
+
+        rootLogger.addHandler(handler)
+        rootLogger.setLevel(logging.DEBUG)
+
+        # Enable GDAL/OGR exceptions
+        gdal_error_handler.install_error_handler()
+
+        logging.debug('Debugging configuration set.')
+        Config()['verbose'] = 'debug'
+
+    elif level == 2 or level == 'default':
+        rootLogger.setLevel(logging.INFO)
+        Config()['verbose'] = 'default'
+
+    elif level == 1 or level.lower() == 'quiet':
+        rootLogger.setLevel(logging.WARNING)
+        Config()['debug'] = 'quiet'
+
+    elif level == 0 or level == 'silent':
+        sys.stdout = open(os.devnull, 'w')
+        Config()['debug'] = 'silent'
+
+

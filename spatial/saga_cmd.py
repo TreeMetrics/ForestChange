@@ -9,13 +9,12 @@
 # ==========================================================================================
 """ This module runs Saga Gis utilities adapted to the Forest Spatial requirements. """
 
-import os
-from miscellaneous import cmd
-from bunch import Config
-
 import logging
-import gdal_reader as gdalr
+import os
 
+from core.bunch import Config
+from core.miscellaneous import cmd
+from spatial import gdal_reader as gdalr
 
 '''
 Usage of saga_cmd:
@@ -93,7 +92,7 @@ class Saga(object):
             else:
                 logging.error('SAGA import _raster. File already exist.')
 
-        if gdalr.isvalid(ds):
+        if gdalr.gdal2ds(ds):
             grid_name = os.path.join(self.tempdir, name)
 
             # Create output dictionary
@@ -144,7 +143,7 @@ class Saga(object):
                 return os.path.splitext(input_file)[0] + '.sgrd'
 
             else:
-                if gdalr.isvalid(input_file):
+                if gdalr.gdal2ds(input_file):
                     return self._gdal2saga(input_file)
 
                 else:
@@ -188,7 +187,7 @@ class Saga(object):
 
         elif not output:
             # OP2: Python
-            return gdalr.gdal_import(os.path.splitext(sgrd_file)[0] + '.sdat')
+            return gdalr.gdal2py(os.path.splitext(sgrd_file)[0] + '.sdat')
 
         else:
             logging.error('Error _saga2output. Format unknown.')
