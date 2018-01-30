@@ -101,6 +101,8 @@ def normalisation(bands_list, nodata=0):
         raster_array = bands_list[i]
         # raster_array[raster_array == nodata] = np.nan
 
+        raster_array = raster_array.astype(np.float16)
+
         np.seterr(divide='ignore', invalid='ignore')
         raster_array *= 255.0 / raster_array.max()
         # raster_array = np.divide(raster_array, (raster_array.max()/255))

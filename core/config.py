@@ -83,28 +83,27 @@ def check_config():
         raise Exception('Error reading "config.cfg", variable "settings_json_path" not found. Aborting...')
 
     settings_json_path = list(dict_find('settings_json_path', config_dict))[0]
-    if os.path.exists(settings_json_path):
-        envidic['settings_file'] = settings_json_path
 
-    elif os.path.exists(os.path.join(os.path.dirname(__file__), settings_json_path)):
-        envidic['settings_file'] = os.path.join(os.path.dirname(__file__), settings_json_path)
+    # find file in all the directories
+    for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.dirname(__file__))):
+        for filename in [f for f in filenames if f == os.path.basename(settings_json_path)]:
+            envidic['settings_file'] = os.path.join(dirpath, filename)
 
-    else:
+    if not os.path.exists(envidic['settings_file']):
         logging.error("Please specify the parameters for analysis. JSON file with parameters is required: " +
                       str(Config()["settings_file"]))
-
         raise Exception('Settings file "settings.json" cannot be found. Aborting...')
 
+    # find forest areas
     forest_area_path = list(dict_find('forest_area_path', config_dict))[0]
-    if os.path.exists(os.path.join(os.path.dirname(__file__), forest_area_path)):
-        envidic['forest_area_path'] = os.path.join(os.path.dirname(__file__), forest_area_path)
+    for dirpath, dirnames, filenames in os.walk(os.path.dirname(os.path.dirname(__file__))):
+        for filename in [f for f in filenames if f == os.path.basename(forest_area_path)]:
+            envidic['forest_area_path'] = os.path.join(dirpath, filename)
 
-    elif os.path.exists(forest_area_path):
-        envidic['forest_area_path'] = forest_area_path
-
-    else:
-        envidic['forest_area_path'] = None
-        logging.warning("forest_area_path not defined")
+    if not os.path.exists(envidic['forest_area_path']):
+        logging.error("Please specify the parameters for analysis. JSON file with parameters is required: " +
+                      str(Config()["settings_file"]))
+        raise Exception("forest_area_path not defined")
 
 
 def logging_config(level='default'):

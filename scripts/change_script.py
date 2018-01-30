@@ -15,7 +15,7 @@ from toolbox.image_tools import RasterTools as PyTools
 def main(d1, d2, settings):
 
     # equalization = settings.equalization
-    normalisation = settings.normalisation
+    # normalisation = settings.normalisation
 
     # Pre-processing for both datasets
     data_dict = {}
@@ -35,9 +35,9 @@ def main(d1, d2, settings):
         # if equalization:
         #     dataset = PyTools().equalization(dataset)
 
-        if normalisation:
-            dataset = PyTools().normalisation(dataset)
-            data_dict["d" + str(j)]["normalised"] = dataset
+
+        dataset = PyTools().normalisation(dataset)
+        data_dict["d" + str(j)]["normalised"] = dataset
 
         del dataset
 

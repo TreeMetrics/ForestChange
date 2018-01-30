@@ -49,6 +49,14 @@ class ForestChange(EO4AProcess):
                 max_occurs=1,
             ),
             LiteralInput(
+                'tile_size',
+                'Tile size for improve performance of analysis',
+                data_type='string',
+                abstract="Tile size for improve performance of analysis (optional)",
+                min_occurs=0,
+                max_occurs=1,
+            ),
+            LiteralInput(
                 'destfile',
                 'Destination file name',
                 data_type='string',
@@ -93,11 +101,12 @@ class ForestChange(EO4AProcess):
         logger.info('Request inputs: %s', request.inputs)
 
         # Capture Forest Change output in a temp file
-        return 'python  %s/forest_change.py --s2_product_dir_newer %s --s2_product_dir_older %s --threshold %s --tempdir %s -o %s --debug' % (
+        return 'python  %s/forest_change.py --s2_product_dir_newer %s --s2_product_dir_older %s --threshold %s --tile_size %s --tempdir %s -o %s --debug' % (
             self._package_path,
             self._get_input(request, 's2_product_dir_newer'),
             self._get_input(request, 's2_product_dir_older'),
             self._get_input(request, 'change_threshold'),
+            self._get_input(request, 'tile_size'),
             self.temp_path, os.path.join(self.output_dir, self._get_input(request, 'destfile')))
 
     def set_output(self, request, response):

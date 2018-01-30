@@ -11,8 +11,13 @@
 
 
 # Import modules
-import Image
-import ImageDraw
+try:
+    from PIL import Image, ImageDraw
+
+except ImportError:
+    import Image
+    import ImageDraw
+
 import logging
 import math
 import numpy as np
