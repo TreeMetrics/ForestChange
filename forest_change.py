@@ -150,8 +150,8 @@ reclassify_raster = raster_tools.reclassify(reclassify_raster, new_value=1,
 
 gdal_import.raster2file(reclassify_raster, file_path=output)
 
-output2 = os.path.splitext(output)[0] + 'change_index' + os.path.splitext(output)[1]
-gdal_import.raster2file(change_raster, file_path=output2)
+# output2 = os.path.splitext(output)[0] + 'change_index' + os.path.splitext(output)[1]
+# gdal_import.raster2file(change_raster, file_path=output2)
 
 # Check output
 if not os.path.exists(output):
