@@ -24,18 +24,18 @@ class ForestChange(EO4AProcess):
     def __init__(self):
         inputs = [
             LiteralInput(
-                's2_product_dir_newer',
-                's2_product_dir_newer',
+                's2_product_zip_newer',
+                's2_product_zip_newer',
                 data_type='string',
-                abstract="Full path to Sentinel-2 product directory",
+                abstract="Full path to Sentinel-2 newer product zip file",
                 min_occurs=1,
                 max_occurs=1,
             ),
             LiteralInput(
-                's2_product_dir_older',
-                's2_product_dir_older',
+                's2_product_zip_older',
+                's2_product_zip_older',
                 data_type='string',
-                abstract="Full path to Sentinel-2 product directory",
+                abstract="Full path to Sentinel-2 older product zip file",
                 min_occurs=1,
                 max_occurs=1,
             ),
@@ -95,8 +95,8 @@ class ForestChange(EO4AProcess):
         string with the path of a TIF file containing the forest change detection
             The service command to be executed.
                     
-            s2_product_dir_newer: Full path to Sentinel-2 product directory, data type=string
-            s2_product_dir_older: Full path to Sentinel-2 product directory, data type=string
+            s2_product_dir_newer: Full path to the newer Sentinel-2 product zip file, data type=string
+            s2_product_dir_older: Full path to the older Sentinel-2 product zip file, data type=string
             change_threshold: Change threshold 0-100. Default is 30, data type=integer
             destfile: Full path to destination file name., data type=string
             output: ForestChange output
@@ -108,8 +108,8 @@ class ForestChange(EO4AProcess):
         # Capture Forest Change output in a temp file
         return 'python  %s/forest_change.py --s2_product_dir_newer %s --s2_product_dir_older %s --threshold %s --tile_size %s --tempdir %s -o %s' % (
             self._package_path,
-            self._get_input(request, 's2_product_dir_newer'),
-            self._get_input(request, 's2_product_dir_older'),
+            self._get_input(request, 's2_product_zip_newer'),
+            self._get_input(request, 's2_product_zip_older'),
             self._get_input(request, 'change_threshold'),
             self._get_input(request, 'tile_size'),
             self.temp_path, os.path.join(self.output_dir, self._get_input(request, 'destfile')))
