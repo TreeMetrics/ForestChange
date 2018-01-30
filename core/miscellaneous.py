@@ -18,6 +18,17 @@ import subprocess
 import logging
 
 
+def is_float(input):
+
+    try:
+        num = float(input)
+
+    except ValueError:
+        return False
+
+    return True
+
+
 def cmd(*args):
     """Run cmd and catch the output (always verbose) """
 

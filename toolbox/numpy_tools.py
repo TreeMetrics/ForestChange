@@ -10,9 +10,56 @@
 """ This module is a test"""
 
 import collections
-import copy
 import numpy as np
 import logging
+
+from core import miscellaneous
+
+
+def reclassify(array, new_value, old_value_min=None, old_value_max=None, nodata=0):
+
+    print old_value_max
+    print old_value_min
+
+    if new_value == 'nan':
+        new_value = np.nan
+
+    array = array.astype(np.float)
+    nodata = float(nodata)
+
+    array[array == nodata] = np.nan
+    np.around(array, decimals=3)
+
+    # Get max and min.
+    if not old_value_min and not old_value_max:
+        logging.warning('Value for reclassification not defined')
+
+    elif not old_value_min or not miscellaneous.is_float(old_value_min):
+        old_value_max = round(float(old_value_max), 3)
+        array[array <= old_value_max] = new_value
+
+    elif not old_value_max or not miscellaneous.is_float(old_value_max):
+        old_value_min = round(float(old_value_min), 3)
+        array[array >= old_value_min] = new_value
+
+    elif old_value_max > old_value_min:
+        old_value_max = round(float(old_value_max), 3)
+        old_value_min = round(float(old_value_min), 3)
+
+        array[array <= old_value_max] = new_value
+        array[array >= old_value_min] = new_value
+
+    elif old_value_max == old_value_min:
+
+        old_value_max = round(float(old_value_max), 3)
+        array[array == old_value_max] = new_value
+
+    else:
+        logging.warning('Value out of range for reclassification')
+
+    array[array == np.nan] = nodata
+
+    return array
 
 
 def equalization(bands_list):
@@ -44,7 +91,7 @@ def equalization(bands_list):
     return np.array(d_bands)
 
 
-def normalisation(bands_list, nodata=None):
+def normalisation(bands_list, nodata=0):
     """Normalisation of a 2D array to 0-255 
     :param bands_list List of 2D array"""
 
@@ -59,12 +106,8 @@ def normalisation(bands_list, nodata=None):
         # raster_array = np.divide(raster_array, (raster_array.max()/255))
 
         # mask = np.ma.masked_invalid(raster_array)
-
+        raster_array = np.ma.masked_invalid(raster_array).filled(nodata)
         raster_array = raster_array.astype(np.uint8)
-        # raster_array[raster_array == np.nan] = nodata
-        # raster_array[np.isneginf(raster_array)] = 0
-        # raster_array[raster_array < 0] = nodata
-        # raster_array[raster_array > 255] = nodata
 
         if not isinstance(raster_array, (np.ndarray, np.generic)):
             logging.warning('Failed creating equalization')
@@ -76,10 +119,6 @@ def normalisation(bands_list, nodata=None):
 
 
 def histogram_matching(array1, array2, nodata=0):
-
-    #mask = copy.deepcopy(array2)
-    #mask[mask != nodata] = 1
-    #mask[mask == nodata] = 0
 
     # Histogram matching
     oldshape = array2.shape
@@ -120,8 +159,7 @@ def histogram_matching(array1, array2, nodata=0):
     # that correspond most closely to the quantiles in the source image
     interp_t_values = np.interp(s_quantiles, t_quantiles, t_values)
 
-    # output = np.ma.array(interp_t_values[bin_idx].reshape(oldshape), mask=mask).filled(nodata)
-    return interp_t_values[bin_idx].reshape(oldshape)
+    return np.ma.masked_invalid(interp_t_values[bin_idx].reshape(oldshape)).filled(nodata)
 
 
 def rgb_intensity(bands_list):

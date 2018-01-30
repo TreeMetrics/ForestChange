@@ -10,9 +10,19 @@
 
 
 import logging
+import os
 
 from spatial.gdal_reader import GdalReader
 from spatial.gdal2py import Gdal2Py
+
+
+def raster2file(raster, file_path):
+
+    ds = src2ds(raster)
+    GdalReader().gdal2file(ds, file_path, driver_name='GTiff')
+
+    if os.path.exists(file_path):
+        return file_path
 
 
 def gdal_import(gdal_src, load_data=True):

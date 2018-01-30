@@ -35,23 +35,6 @@ except ImportError:
 # from gdalconst import *
 
 
-def reclassify(array, old_value, new_value, operator):
-
-    if str(operator).lower() == 'equal' or 'eq' or '=':
-        array[array == old_value] = new_value
-
-    elif str(operator).lower() == 'greater' or 'gt' or '>':
-        array[array >= old_value] = new_value
-
-    elif str(operator).lower() == 'lower' or 'lt' or '<':
-        array[array <= old_value] = new_value
-
-    else:
-       logging.error('reclassify: Operator not recognised')
-
-    return array
-
-
 def single_bands_to_multiband(gdal_bands_list, output=None):
     """ Convert several gdal single file to a single gdal datasource"""
 

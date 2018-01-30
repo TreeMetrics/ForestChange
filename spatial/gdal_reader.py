@@ -222,6 +222,10 @@ class GdalReader:
 
         return ds
 
+    def gdal2file(self, source, file_path, driver_name='GTiff'):
+
+        return gdal.GetDriverByName(driver_name).CreateCopy(file_path, source, 0)
+
     def create_ds(self, name, x_res, y_res, nbands, data_type):
         # Get global variables
         tempdir = Config()['tempdir']

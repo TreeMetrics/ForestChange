@@ -11,10 +11,9 @@
 
 import logging
 
-import toolbox.raster.gdal_utils
+from toolbox import numpy_tools
+from toolbox.raster import gdal_utils
 from spatial import gdal_import, gdal_reader
-from raster import gdal_utils
-
 
 def single_bands_to_multiband(bands_list, output=None):
 
@@ -24,7 +23,7 @@ def single_bands_to_multiband(bands_list, output=None):
 
 def poly_clip(raster, polygons, output):
 
-    return gdal_import.gdal_import(toolbox.raster.gdal_utils.poly_clip(raster, polygons, output))
+    return gdal_import.gdal_import(gdal_utils.poly_clip(raster, polygons, output))
 
 
 def merge(src_list, outname, smooth_edges=False):
@@ -34,14 +33,17 @@ def merge(src_list, outname, smooth_edges=False):
     return gdal_import.gdal_import(gdal_utils.merge(src_ds_list, outname, smooth_edges=smooth_edges))
 
 
-def reclassify(input_raster, old_value, new_value, operator, output=None):
+def reclassify(input_raster, new_value, old_value_min=None, old_value_max=None, output=None):
 
     logging.debug('Reclassify raster... ')
 
     src_ds = gdal_import.src2ds(input_raster)
     raster_array = gdal_reader.GdalReader().ds2array(src_ds)
+    nodata = src_ds.GetRasterBand(1).GetNoDataValue()
 
-    reclassify = gdal_utils.reclassify(raster_array, old_value, new_value, operator)
+    reclassify = numpy_tools.reclassify(raster_array, new_value, old_value_min, old_value_max, nodata=nodata)
+
+    print reclassify
 
     if not output:
         output = 'reclassified'

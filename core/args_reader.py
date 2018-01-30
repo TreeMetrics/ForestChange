@@ -189,12 +189,6 @@ def main():
     else:
         config.logging_config(level='default')
 
-    # parser.add_usage_group()
-    # parser.add_argument("-s", "--s2_product_dir", action=S2ProductCheck, required=False,
-    #                    help="Sentinel 2 output directory")
-    # args, leftovers = parser.parse_known_args()
-    # if args.s2_product_dir is None:
-
     # Get tempdir
     parser.add_argument("--tempdir", required=False, help="Temporal directory")
     args, leftovers = parser.parse_known_args()
@@ -204,9 +198,6 @@ def main():
     # Get rest of input data
     d1 = parser.add_argument_group('Newer dataset')
     group1 = d1.add_mutually_exclusive_group(required=True)
-    group1.add_argument("-b1", "--new_rgbnir_bands", action=FileListCheck,
-                        help="List of newer single band files separated by colon: "
-                             "'red_band;green_band;blue_band;nir_band'")
     group1.add_argument("-d1", "--new_rgbnir_file", action=FileCheck, required=False,
                         help="Full path of newer multiband dataset (rgbnir TIF format).")
     group1.add_argument("-s2n", "--s2_product_dir_newer", action=S2ProductCheck, required=False,
@@ -215,13 +206,13 @@ def main():
     # Add  old dataset
     d2 = parser.add_argument_group('Older dataset')
     group2 = d2.add_mutually_exclusive_group(required=True)
-    group2.add_argument("-b2", "--old_rgbnir_bands", action=FileListCheck,
-                        help="List of older single band files separated by colon: "
-                             "'red_band;green_band;blue_band;nir_band'")
     group2.add_argument("-d2", "--old_rgbnir_file", action=FileCheck, required=False,
                         help="Full path of older multiband dataset (rgbnir TIF format).")
     group2.add_argument("-s2o", "--s2_product_dir_older", action=S2ProductCheck, required=False,
                         help="Sentinel 2 output directory")
+
+    group2.add_argument("-th", "--threshold", type=int, required=False, default=30,
+                        help="Change threshold 0-100. Default is 30")
 
     if os.path.exists(Config()['settings_file']):
         default_bounds = Config()['forest_area_path']

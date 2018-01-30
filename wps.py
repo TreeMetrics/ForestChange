@@ -41,6 +41,14 @@ class ForestChange(EO4AProcess):
                 max_occurs=1,
             ),
             LiteralInput(
+                'change_threshold',
+                'Change threshold 0-100',
+                data_type='integer',
+                abstract="Change threshold 0-100. Default is 30",
+                min_occurs=1,
+                max_occurs=1,
+            ),
+            LiteralInput(
                 'destfile',
                 'Destination file name',
                 data_type='string',
@@ -85,10 +93,11 @@ class ForestChange(EO4AProcess):
         logger.info('Request inputs: %s', request.inputs)
 
         # Capture Forest Change output in a temp file
-        return 'python  %s/forest_change.py --s2_product_dir_newer %s --s2_product_dir_older %s --tempdir %s -o %s --debug' % (
+        return 'python  %s/forest_change.py --s2_product_dir_newer %s --s2_product_dir_older %s --threshold %s --tempdir %s -o %s --debug' % (
             self._package_path,
             self._get_input(request, 's2_product_dir_newer'),
             self._get_input(request, 's2_product_dir_older'),
+            self._get_input(request, 'change_threshold'),
             self.temp_path, os.path.join(self.output_dir, self._get_input(request, 'destfile')))
 
     def set_output(self, request, response):
