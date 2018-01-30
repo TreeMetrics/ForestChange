@@ -10,6 +10,7 @@
 """ This module is a test"""
 
 from toolbox.image_tools import RasterTools as PyTools
+from spatial.saga_cmd import Saga
 
 
 def main(d1, d2, settings):
@@ -19,6 +20,7 @@ def main(d1, d2, settings):
     normalisation = True
     histogram_matching = None
     method = 'nir'       # Intensity, nir or ndvi
+    obia = False
 
     # Pre-processing for both datasets
     data_dict = {}
@@ -64,22 +66,22 @@ def main(d1, d2, settings):
         if histogram_matching:
             data_dict["d1"]["base_layer"] = PyTools().histogram_matching(input_raster=data_dict["d1"]["base_layer"],
                                                                          reference=data_dict["d2"]["base_layer"],
-                                                                         output='hist_matching_dataset1')
+                                                                             output='hist_matching_dataset1')
 
-    diff = PyTools().single_band_calculator(rlist=[data_dict["d1"]["base_layer"], data_dict["d2"]["base_layer"]],
-                                            expression='a-b')
+    if obia:
+        # Object base apporach
+
+        # Segmentation of the dataset
+        segments = Saga().region_growing(rlist=[data_dict["d1"]["base_layer"]], output=None)
+
+        # Zonal stats for raster
+        stats1 = PyTools().zonal_stats(raster=data_dict["d1"]["base_layer"], zones=segments, resize=True)
+        stats2 = PyTools().zonal_stats(raster=data_dict["d2"]["base_layer"], zones=segments, resize=True)
+        diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b')
+
+    else:
+
+        diff = PyTools().single_band_calculator(rlist=[data_dict["d1"]["base_layer"], data_dict["d2"]["base_layer"]],
+                                                expression='a-b')
 
     return diff
-
-    # Object base apporach
-
-    # Segmentation of the dataset
-    #segments = Saga().region_growing(rlist=[data_dict["d1"]["intensity"]], output=None)
-
-    # Zonal stats for rasters
-    #stats1 = PyTools().zonal_stats(raster=data_dict["d1"]["intensity"], zones=segments, resize=True)
-
-    #stats2 = PyTools().zonal_stats(raster=data_dict["d2"]["intensity"], zones=segments, resize=True)
-
-    # Difference
-    #diff = PyTools().single_band_calculator(rlist=[stats1['mean'], stats2['mean']], expression='a-b')
