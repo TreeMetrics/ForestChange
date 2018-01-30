@@ -84,8 +84,8 @@ else:
 
 # Tiling datasets for performance
 
-# dataset1_tiles = raster_tiles.gdal2tiles(src=dataset1, tile_size=tile_size)
-tile_size = args.tile_size
+dataset1_tiles = raster_tiles.gdal2tiles(src=dataset1, tile_size=tile_size)
+# tile_size = args.tile_size
 # dataset1_tiles = {}
 # dataset1_tiles.update(raster_tiles.gdal2tiles(src=dataset1, tile_size=tile_size, tile_id_y=3, tile_id_x=3))
 # dataset1_tiles.update(raster_tiles.gdal2tiles(src=dataset1, tile_size=tile_size, tile_id_y=2, tile_id_x=3))
