@@ -135,7 +135,7 @@ def main(args):
 
     # Parameter space 60m Output
     resolution = 60
-    output = os.path.join(output_dir, 'change_output')
+    output = os.path.join(output_dir, 'change_output.tif')
 
     s2_bands_newer_rgbn = sentinel2rgbn(s2_bands_newer_product, resolution=resolution, output='s2_rgbn')
     s2_bands_older_rgbn = sentinel2rgbn(s2_bands_older_product, resolution=resolution, output='s2_rgbn')
@@ -151,7 +151,7 @@ def main(args):
     if 'additional_outputs' in args and args.additional_outputs:
 
         resolution = 10
-        output = os.path.join(output_dir, 'additional_outputs', 'change_output')
+        output = os.path.join(output_dir, 'additional_outputs', 'change_output_10.tif')
 
         if not os.path.exists(os.path.dirname(output)):
             os.makedirs(os.path.dirname(output))
@@ -164,7 +164,7 @@ def main(args):
 
         change_script.main(s2_bands_newer_rgbn, s2_bands_older_rgbn, output=output,
                            threshold=args.threshold, boundary_path=boundaries,
-                           tile_size=1000, parameters=args.parameters, change_index=True)
+                           tile_size=None, parameters=args.parameters, change_index=True)
 
     # Wipe temp files
     if not Config()['verbose'] == 'debug':
