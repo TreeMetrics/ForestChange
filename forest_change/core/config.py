@@ -112,12 +112,12 @@ def check_config():
     else:
         raise Exception('Error Importing GDAL')
 
-    # Check SAGA
-    if 'saga_bins' not in envidic:
-        envidic['saga_cmd'] = str(miscellaneous.find_bins('saga_cmd')).strip()
-
-    if not os.path.exists(str(envidic['saga_cmd'])):
-        raise Exception('Error finding SAGA bins. ' + str(envidic['saga_cmd']))
+    # # Check SAGA
+    # if 'saga_bins' not in envidic:
+    #     envidic['saga_cmd'] = str(miscellaneous.find_bins('saga_cmd')).strip()
+    #
+    # if not os.path.exists(str(envidic['saga_cmd'])):
+    #     raise Exception('Error finding SAGA bins. ' + str(envidic['saga_cmd']))
 
     # Check config file
     if not os.path.exists(config_file):
