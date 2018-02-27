@@ -76,6 +76,9 @@ def gdal2tiles(src, tile_size=500, tile_id_y=None, tile_id_x=None):
         x_tile_range = range(nxtiles + 1)
         y_tile_range = range(nytiles + 1)
 
+    print range(nytiles + 1)
+    print range(nxtiles + 1)
+
     tiles = {}
     for xtile in x_tile_range:
         for ytile in y_tile_range:
@@ -119,6 +122,8 @@ def gdal2tiles(src, tile_size=500, tile_id_y=None, tile_id_x=None):
             projection = src_ds.GetProjection()
             nodata = src_ds.GetRasterBand(1).GetNoDataValue()
             name = src_ds.GetMetadataItem('FilePath')
+
+            print arr_i
 
             tiles[str(xtile) + '_' + str(ytile)] = GdalReader().array2ds(arr_i,
                                                                          name + '_' + str(xtile) + '_' + str(ytile),
