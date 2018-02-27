@@ -60,23 +60,23 @@ def verbose_config(level='default'):
         gdal_error_handler.install_error_handler()
 
         logging.debug('Debugging configuration set.')
-        Config()['verbose'] = 'debug'
+        Config(overwrite=True)['verbose'] = 'debug'
 
     elif level == 3 or level == 'verbose':
         rootLogger.setLevel(logging.INFO)
-        Config()['verbose'] = 'verbose'
+        Config(overwrite=True)['verbose'] = 'verbose'
 
     elif level == 2 or level == 'default':
         rootLogger.setLevel(logging.INFO)
-        Config()['verbose'] = 'default'
+        Config(overwrite=True)['verbose'] = 'default'
 
     elif level == 1 or level.lower() == 'quiet':
         rootLogger.setLevel(logging.WARNING)
-        Config()['debug'] = 'quiet'
+        Config(overwrite=True)['verbose'] = 'quiet'
 
     elif level == 0 or level == 'silent':
         sys.stdout = open(os.devnull, 'w')
-        Config()['debug'] = 'silent'
+        Config(overwrite=True)['verbose'] = 'silent'
 
 
 def tempdir_config(tempdir_path):
@@ -118,6 +118,9 @@ def check_config():
     #
     # if not os.path.exists(str(envidic['saga_cmd'])):
     #     raise Exception('Error finding SAGA bins. ' + str(envidic['saga_cmd']))
+
+    # Set Default Verbosing
+    envidic['verbose'] = 'default'
 
     # Check config file
     if not os.path.exists(config_file):

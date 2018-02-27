@@ -43,6 +43,10 @@ def main(dataset1, dataset2, output, threshold, parameters, boundary_path=None, 
 
         clipped_dataset1 = {}
         for tile_name, raster_tile in dataset1_tiles.iteritems():
+
+            print 'tile: ' + str(tile_name)
+            print 'tile1: ' + str(raster_tile)
+
             clipped_dataset1[tile_name] = raster_tools.poly_clip(raster=dataset1_tiles[tile_name], polygons=bounds,
                                                                  output=str(tile_name) + "_clipped")
         clipped_dataset2 = {}

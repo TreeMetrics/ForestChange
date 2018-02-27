@@ -35,6 +35,9 @@ def single_bands_to_multiband(bands_list, output=None):
 
 def poly_clip(raster, polygons, output):
 
+    print 'raster: ' + str(polygons)
+    print 'poly: ' + str(raster)
+
     return gdal_import.gdal_import(gdal_utils.poly_clip(raster, polygons, output))
 
 

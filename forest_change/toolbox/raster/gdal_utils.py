@@ -280,6 +280,9 @@ def poly_clip(raster, polygons, outuput):
     else:
         return logging.error('Error in array shape.')
 
+    print 'poly_ds: ' + str(filtered_poly_ds)
+    print 'raster_array: ' + str(clip)
+
     new_array = clip_raster_array(vds=filtered_poly_ds, raster_array=clip, geotransform=geo_trans, nodata=nodata)
 
     return GdalReader().array2ds(src_array=np.array(new_array), output=outuput, geotransform=geo_trans,
@@ -345,6 +348,8 @@ def clip_raster_array(vds, raster_array, geotransform, nodata=0):
             del feature
 
         layer.ResetReading()
+
+        print 'rpoly: ' + str(rasterpoly)
 
         # Image to array
         try:
