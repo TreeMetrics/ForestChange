@@ -22,7 +22,7 @@ The ForestChange_ service compare two Sentinel-2 datasets using NDVI and returns
 
 * *Output*:
 
-  - ``output_dir`` - ForestChange_ output products directory including a TIF with the results of the change detection analysis with values 0 (not changed) and (changed). This output is 60 m resolution. If ``additional_outputs`` is selected an additional output 10 m resolution will be generated. This output will be available for download, but not for display.
+  - ``output_dir`` - ForestChange_ output products directory including a TIF with the results of the change detection analysis with values 10 for reforested areas and 20 for deforested. This output is 60 m resolution. If ``additional_outputs`` is selected an additional output 10 m resolution will be generated. This output will be available for download, but not for display.
 
 .. note::
     * Note that ONLY 2 datasets are allowed for each input. The datasets shall belong to the same area (same Sentinel-2 Tile Number).
