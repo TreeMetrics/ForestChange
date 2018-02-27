@@ -1,9 +1,0 @@
-{"profiles": {
-  "sentinel_default": {
-    "source_name": "sentinel",
-    "equalization":"True",
-    "normalisation":"True",
-    "segment_size": 2
-  }
-}
-}

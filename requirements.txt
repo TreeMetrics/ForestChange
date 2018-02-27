@@ -1,0 +1,7 @@
+python-gdal
+numpy
+lxml
+shapely
+pyproj
+cached_property
+zipfile2

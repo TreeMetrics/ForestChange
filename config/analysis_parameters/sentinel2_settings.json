@@ -1,0 +1,7 @@
+{"sentinel2": {
+  "default": {
+    "equalization":"True",
+    "normalisation":"True"
+  }
+}
+}
