@@ -1,8 +1,3 @@
-.. _atm-corr:
-
-Sentinel-2 Toolbox
-------------------------------
-
 .. _ForestChange_service:
 
 ^^^^^^^^^^^^^^^^^^^^^^
