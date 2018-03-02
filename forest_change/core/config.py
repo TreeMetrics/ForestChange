@@ -12,6 +12,7 @@ Basic configuration holder objects.
 """
 
 import ConfigParser
+import tempfile
 import logging
 import os
 import sys
@@ -79,7 +80,9 @@ def verbose_config(level='default'):
         Config(overwrite=True)['verbose'] = 'silent'
 
 
-def tempdir_config(tempdir_path):
+def tempdir_config(outputdir_path):
+	tempdir_path = tempfile.mkdtemp(dir=outputdir_path)
+    logging.info('Tempdir: %s', tempdir_path)
     if not tempdir_path or not os.path.isdir(tempdir_path):
         os.makedirs(tempdir_path)
 
