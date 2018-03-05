@@ -37,7 +37,7 @@ class SetTempdir(argparse.Action):
     def __call__(self, parser_i, namespace, value, option_string=None):
         """ Set tempdir"""
 
-        config.tempdir_config(tempdir_path=value)
+        config.tempdir_config(outputdir_path=value)
         setattr(namespace, self.dest, value)
 
 
@@ -191,7 +191,7 @@ def define_s2_change_args(parser_i):
     parser_i.add_argument("--additional_outputs", action=Str2Bool, required=False,
                           help="Generate additional_outputs at 10m resolution")
 
-    parser_i.add_argument("-o", "--output_dir", required=True, help="Output file path (TIF format)")
+    parser_i.add_argument("-o", "--output_dir", required=True, action=SetTempdir, help="Output file path (TIF format)")
 
     parser_i.add_argument("-p", "--parameters", type=str,
                           choices=AnalysisParameters().list_analysis_profiles()['sentinel2'],
@@ -216,9 +216,6 @@ def main():
 
     # Define the arguments for verbosity.
     define_flags_arg(parser)
-
-    # Get tempdir
-    parser.add_argument("--tempdir", required=False, action=SetTempdir, help="Temporal directory")
 
     # Create the parser for the different command
     # parser_rgb = subparsers.add_parser('RGB', help='Sentinel change detection')

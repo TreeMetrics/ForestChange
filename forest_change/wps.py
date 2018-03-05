@@ -85,14 +85,11 @@ class ForestChange(EO4AProcess):
             dest_dir: Full path to destination file name., data type=string
             output: ForestChange output
         """
-        self.temp_path = tempfile.mkdtemp(dir=self.output_dir)
-        logger.info('Tempdir: %s', self.temp_path)
         logger.info('Request inputs: %s', request.inputs)
 
         # Capture Forest Change output in a temp file
-        return 'python  %s/forest_change_main.py --tempdir %s Sentinel2 --s2_product_dir %s --threshold %s --additional_outputs %s -o %s' % (
+        return 'python  %s/forest_change_main.py Sentinel2 --s2_product_dir %s --threshold %s --additional_outputs %s -o %s' % (
             self._package_path,
-            self.temp_path,
             self._get_input(request, 's2_product_dir'),
             self._get_input(request, 'change_threshold'),
             self._get_input(request, 'additional_outputs'),
