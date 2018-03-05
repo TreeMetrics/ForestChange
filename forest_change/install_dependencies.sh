@@ -2,7 +2,7 @@
 
 # --- Install Python and depencies--
 python get-pip.py
-sudo pip install lxml shapely pyproj cached_property zipfile2
+pip install lxml shapely pyproj cached_property zipfile2
 
 
 # --- Install SAGA and depencies--
@@ -25,21 +25,21 @@ tar xvf  geos-3.6.2.tar
 
 cd geos-3.6.2
 
-./configure  &&  make  &&  sudo make install
-sudo ldconfig
+./configure  &&  make  &&  make install
+ldconfig
 
 ##########################################
 
 # Compile & install proj.4. Taken from:
 # http://grasswiki.osgeo.org/wiki/Compile_and_Install_Ubuntu#PROJ4
 
-sudo apt-get install subversion
+apt-get install subversion
 
 cd /tmp
 svn co http://svn.osgeo.org/metacrs/proj/branches/4.9/proj/
 
 cd /tmp/proj/nad
-sudo wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
+wget http://download.osgeo.org/proj/proj-datumgrid-1.5.zip
 
 unzip -o -q proj-datumgrid-1.5.zip
 
@@ -47,7 +47,7 @@ unzip -o -q proj-datumgrid-1.5.zip
 
 cd /tmp/proj/
 
-./configure  &&  make  &&  sudo make install && sudo ldconfig
+./configure  &&  make  &&  make install && ldconfig
 
 ##########################################
 
@@ -55,7 +55,7 @@ cd /tmp/proj/
 # taken from:
 # http://grasswiki.osgeo.org/wiki/Compile_and_Install_Ubuntu#GDAL
 
-# sudo apt-get install libtiff4
+# apt-get install libtiff4
 
 cd /tmp
 svn co https://svn.osgeo.org/gdal/branches/2.2/gdal gdal_stable
@@ -82,4 +82,4 @@ CFLAGS="-g -Wall" LDFLAGS="-s" ./configure \
 
 #with-pg=/usr/bin/pg_config \
 
-make -j2  &&  sudo make install  &&  sudo ldconfig
+make -j2  &&  make install  &&  ldconfig
