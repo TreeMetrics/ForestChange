@@ -88,7 +88,7 @@ class ForestChange(EO4AProcess):
         logger.info('Request inputs: %s', request.inputs)
 
         # Capture Forest Change output in a temp file
-        return 'python  %s/forest_change_main.py Sentinel2 --s2_product_dir %s --threshold %s --additional_outputs %s -o %s' % (
+        return 'python  %s/forest_change_main.py -v 4 Sentinel2 --s2_product_dir %s --threshold %s --additional_outputs %s -o %s' % (
             self._package_path,
             self._get_input(request, 's2_product_dir'),
             self._get_input(request, 'change_threshold'),

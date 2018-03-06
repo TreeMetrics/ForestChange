@@ -19,6 +19,11 @@ from core import miscellaneous
 
 def reclassify(array, new_value, old_value_min=None, old_value_max=None, nodata=0):
 
+    logging.debug('Reclassify raster values: ' + str(old_value_min) + 'to ' + str(new_value))
+
+    if not array or not isinstance(array, np.ndarray):
+        logging.warning('Raster Array is not defined' + str(array))
+
     if new_value == 'nan':
         new_value = np.nan
 

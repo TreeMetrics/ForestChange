@@ -70,18 +70,30 @@ def main(dataset1, dataset2, output, threshold, parameters, boundary_path=None, 
                                                    d2=clipped_dataset2.items()[tile_id][1], parameters=parameters))
 
     # Merge tiles
-    change_raster = raster_tools.merge(src_list=change_rasters, outname='change', smooth_edges=False)
+    logging.debug('Merging Tiles:')
+    logging.debug(str(change_rasters))
+
+    if len(xrange(number_tiles)) > 1:
+        change_raster = raster_tools.merge(src_list=change_rasters, outname='change', smooth_edges=False)
+
+    else:
+        change_raster = change_rasters[0]
 
     # Get Change detection for all tiles merged
     # change_raster = image_tools.RasterTools().normalisation(change_raster)
 
-    #threshold = float(threshold) / 100 * 225
+    # threshold = float(threshold) / 100 * 225
 
+    logging.debug('Reclassifying Raster:')
+    logging.debug(str(change_raster))
     raster_stats = raster_tools.raster_stats(change_raster)
 
     # Get normalised values
     threshold_maximum = raster_stats['mode'] + (abs((raster_stats['max']-raster_stats['mode'])) * float(threshold)/100)
     threshold_minimum = raster_stats['mode'] - (abs((raster_stats['min']-raster_stats['mode'])) * float(threshold)/100)
+
+    logging.debug('threshold_maximum: ' + str(threshold_maximum))
+    logging.debug('threshold_minimum: ' + str(threshold_minimum))
 
     # Remove lower than threshold (positive)
     reclassify_raster = raster_tools.reclassify(change_raster, new_value='nan',
