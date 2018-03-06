@@ -59,6 +59,8 @@ def sentinel2rgbn(s2_product_path, resolution, output='s2_rgbn'):
 def main(args):
     # Config()['sparse'] = False
 
+    tempdir = Config()['tempdir']
+
     # Output dir
     if 'output_dir' in args and args.output_dir:
         output_dir = args.output_dir
