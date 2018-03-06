@@ -87,7 +87,7 @@ def tempdir_config(outputdir_path):
         os.makedirs(tempdir_path)
 
     if not tempdir_path or not os.path.isdir(tempdir_path):
-        logging.warning('Tempdir not defined')
+        raise Exception('Tempdir is not defined or cannot be created')
 
     else:
         Config(overwrite=True)['tempdir'] = tempdir_path
@@ -97,7 +97,7 @@ def check_config():
     """ Check configuration variables"""
     logging.info("Checking configuration variables: " + str(cmd('saga_cmd -v')))
 
-    envidic = Config()
+    envidic = Config(overwrite=True)
 
     # Check PYTHON
     if not sys.version_info.major == 2 or not sys.version_info.minor == 7:

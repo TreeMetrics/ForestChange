@@ -59,35 +59,12 @@ def sentinel2rgbn(s2_product_path, resolution, output='s2_rgbn'):
 def main(args):
     # Config()['sparse'] = False
 
-    # Set tempdir
-    if 'tempdir' not in Config() or not os.path.isdir(Config()['tempdir']):
-        if 's2_product_dir' in args and args.s2_product_dir:
-            tempdir = os.path.join(os.path.abspath(args.s2_product_dir), 'temp')
-            Config(overwrite=True)['tempdir'] = tempdir
-
-            if not os.path.isdir(tempdir):
-                try:
-                    os.makedirs(tempdir)
-
-                except OSError as e:
-                    if not e.errno == errno.EEXIST:
-                        raise Exception("Error creating temporary directory:" + str(tempdir))
-
-        else:
-            raise Exception("'s2_product_dir' has not been defined. Aborting ..")
-
-    else:
-        tempdir = Config()['tempdir']
-
     # Output dir
     if 'output_dir' in args and args.output_dir:
         output_dir = args.output_dir
 
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-
-    elif 's2_product_dir' in args and args.s2_product_dir:
-        output_dir = os.path.join(os.path.abspath(args.s2_product_dir), 'output')
 
     else:
         raise Exception("'s2_product_dir' has not been defined. Aborting ..")
