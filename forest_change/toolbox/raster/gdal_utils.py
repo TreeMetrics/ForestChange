@@ -142,8 +142,8 @@ def merge(src_ds_list, outname, smooth_edges=False):
                 continue
 
             xmin_i, xmax_i, ymin_i, ymax_i = GdalReader().get_extent(src_i)
-            xoff = math.ceil((xmin_i - xmin) / xres)
-            yoff = math.ceil((ymax_i - ymax) / yres)
+            xoff = int(math.ceil((xmin_i - xmin) / xres))
+            yoff = int(math.ceil((ymax_i - ymax) / yres))
 
             x_size_i = src_i.RasterXSize
             y_size_i = src_i.RasterYSize
